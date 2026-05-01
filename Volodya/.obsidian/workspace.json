@@ -25,10 +25,14 @@
             "id": "185671851e545106",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Граф"
+              "type": "markdown",
+              "state": {
+                "file": "10 Projects/Учёт ВВТ/Схема проекта.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Схема проекта"
             }
           }
         ],
@@ -218,7 +222,7 @@
       "obsidian-kanban:Create new board": false
     }
   },
-  "active": "9f90ef2d3713e7b0",
+  "active": "185671851e545106",
   "lastOpenFiles": [
     "30 Resources/Postgresql",
     "30 Resources/Linux",
