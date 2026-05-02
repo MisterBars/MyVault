@@ -1,11 +1,17 @@
 ---
 type: achievement
-date: 2026-05-02
-reward: +50 XP
-skill: python
+date: <% tp.date.now("YYYY-MM-DD") %>
+achievement_xp: 50
+skill: 
+category: general
+tags:
+  - achievement
 ---
-# Примеры достижений:
-- Первый запущенный сервер
-- 10 задач подряд без пропуска
-- Завершён первый квест
-- 100 XP в одном навыке
+
+# 🏅 <% tp.file.title %>
+
+## За что получено
+
+## Доказательство
+
+## Связанные задачи или проекты
