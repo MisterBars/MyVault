@@ -18,7 +18,7 @@
       "query": "web3",
       "color": {
         "a": 1,
-        "rgb": 14725458
+        "rgb": 327424
       }
     }
   ],
@@ -32,6 +32,6 @@
   "repelStrength": 10,
   "linkStrength": 1,
   "linkDistance": 250,
-  "scale": 0.9999999999999938,
-  "close": false
+  "scale": 0.22920135941749295,
+  "close": true
 }
