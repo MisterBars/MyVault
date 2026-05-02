@@ -32,14 +32,15 @@ LIMIT 10
 
 ```dataviewjs
 const rewards = { simple: 10, normal: 20, major: 40, boss: 100 };
-const skillNotes = dv.pages().where(x => x.type === "skill" && !x.file.path.includes("90 Templates"));
+const skillNotes = dv.pages()
+  .where(x =>
+    x.type === "skill" &&
+    !x.file.path.includes("90 Templates") &&
+    !x.file.path.includes("40 Archives")
+  );
 
 function levelFromXP(xp) {
-  if (xp >= 750) return 5;
-  if (xp >= 500) return 4;
-  if (xp >= 250) return 3;
-  if (xp >= 100) return 2;
-  return 1;
+  return Math.floor(Math.sqrt(xp / 50)) + 1;
 }
 
 const rows = [];
@@ -60,8 +61,13 @@ for (const s of skillNotes) {
     return sum + (rewards[t.task_type || "simple"] || 10);
   }, 0);
 
-  rows.push([s.file.link, xp, levelFromXP(xp)]);
+  rows.push([
+    s.file.link,
+    tasks.length,
+    xp,
+    levelFromXP(xp)
+  ]);
 }
 
-dv.table(["Навык", "XP", "Уровень"], rows);
+dv.table(["Навык", "Закрыто задач", "XP", "Уровень"], rows);
 ```
