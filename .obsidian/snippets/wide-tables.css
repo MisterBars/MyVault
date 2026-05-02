@@ -1,0 +1,22 @@
+/* 1. Разрешаем контейнеру занимать всю ширину */
+.markdown-preview-sizer {
+  max-width: 100% !important;
+}
+
+/* 2. Всё содержимое, КРОМЕ таблиц и dataview-блоков, оставляем с читаемой шириной и по центру */
+.markdown-preview-sizer > div > *:not(table):not(.block-language-dataview):not(.block-language-dataviewjs) {
+  max-width: var(--file-line-width) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* 3. Обычные markdown-таблицы на всю ширину */
+.markdown-preview-sizer > div > table {
+  width: 100% !important;
+}
+
+/* 4. Dataview-таблицы (и dataviewjs) тоже растягиваем */
+.markdown-preview-sizer > div > .block-language-dataview,
+.markdown-preview-sizer > div > .block-language-dataviewjs {
+  width: 100% !important;
+}
