@@ -1,8 +1,8 @@
 ## Активные проекты
 ```dataview
 TABLE status as "Статус", deadline as "Срок"
-FROM "10 Projects"
-WHERE status = "active"
+FROM ""
+WHERE type = "project" AND contains(file.path, "10 Projects") AND status = "active"
 SORT deadline ASC
 ```
 
