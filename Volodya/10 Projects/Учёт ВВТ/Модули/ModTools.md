@@ -25,7 +25,7 @@ reward_xp: 50
 ```dataview
 TABLE status as "Статус", task_type as "Тип", deadline as "Срок"
 FROM ""
-WHERE type = "task" AND project = [[Учёт ВВТ]] AND contains(file.outlinks, this.file.link)
+WHERE type = "task" AND project = this.project AND contains(file.outlinks, this.file.link)
 SORT deadline ASC
 ```
 
