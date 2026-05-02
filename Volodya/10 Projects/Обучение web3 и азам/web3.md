@@ -5,7 +5,8 @@ deadline: 2027-01-09
 reward_xp: 100
 tags:
   - project
-  - skill/python
+skill:
+  - python
 ---
 # ⚔️ web3
 
