@@ -1,7 +1,7 @@
 ---
 type: module
 status: done
-done_date: 2026-02-05
+done_date: 2026-05-03
 project: "[[Учёт ВВТ]]"
 skill: vba
 tags:

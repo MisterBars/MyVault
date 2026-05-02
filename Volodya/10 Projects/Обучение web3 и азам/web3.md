@@ -1,7 +1,7 @@
 ---
 type: project
 status: active
-deadline: 01/09/2027
+deadline: 2027-01-09
 reward_xp: 100
 tags:
   - project
