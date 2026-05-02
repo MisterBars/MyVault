@@ -1,10 +1,9 @@
 ---
 type: skill
-name: Python
-level: 2
-xp: 150
-rank: Ученик
-area: Разработка
+skill_id: python
+title: Python
+tags:
+  - skill/python
 ---
 # Python
 
