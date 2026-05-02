@@ -1,30 +1,15 @@
 ---
 type: project
 status: active
-deadline: 01/09/2027
+deadline: 
 reward_xp: 100
 tags:
   - project
-  - skill/vba
 ---
-# ⚔️ Учёт ВВТ
-## О проекте
-- **Backend:** Microsoft Access `.accdb` — схема БД, DDL в `ModCreateDB.GetDDLStatements`, 27 таблиц + индексы.
-- **Frontend / «Пульт»:** Microsoft Excel `.xlsm` — UserForm-формы, VBA-модули. UI управляет БД через DAO.
-- **Шифрование:** вынесено в отдельный аддин `EncryptVVT.xlam` (ModCrypt: GenerateSalt, EncryptString, DecryptString, EncodeForData, DecodeFromData, GenerateSimplePassword).
-- **Настройки:** `EncryptVVT.xlam!ModSettings` — хранит константы LOCALBASE, SERVERBASE, SRVLOC, DEFAULTADMINLOGIN, DEFAULTADMINPASSWORD, DEFAULTADMINFULLNAME, ROLEADMINNAME, ADDINPATH, CURRENTUSERID.
-## Принципы архитектуры (v7)
+# ⚔️ <% tp.file.title %>
 
-- Транзакции: `ws.BeginTrans / CommitTrans / Rollback` во всех CRUD-операциях.
-- Единый helper-слой в `ModTools`: `NzStr`, `NzLng`, `NzBool`, `NzDate`, `QuoteSql`, `Q`, `BoolToText`, `BoolToSql`, `Transpose2D`, `ShowError`, `ShowWarning`, `ShowInfo`, `GetDbPath`, `OpenCurrentDb`, `OpenWorkspace`.
-- Единый паттерн ошибок: `On Error GoTo EH` → `ShowError` + `Resume CleanExit`.
-- `ModServiceUsersBuffer` — буфер состояния пользователей при редактировании службы.
-- Soft-delete для `Users` (поле `IsDeleted` нет, вместо него переименование логина в `deleted_<login>_<id>` + деактивация при наличии защищённой истории; жёсткое удаление — если истории нет).
-- `Products.IsDeleted` — мягкое удаление продуктов.
-- Аудит: `WriteAuditEvent` из `ModAudit` — вызывается во всех CRUD-операциях.
-- Динамическое меню с роль-зависимыми кнопками: `F_Menu` + `CMenuButtonHandler`.
 ## Цель
-- Разработать полноценный стек проект по учёту ВВТ.
+
 ## Результат
 ```dataviewjs
 const modules = dv.pages()
@@ -142,8 +127,8 @@ SORT deadline ASC
 ```
 
 ## Важные файлы
-1. [[Схема проекта|Схема]]
-2. [[Прогресс проекта|Прогресс выполнения]]
+- 1
+- 
 
 ## Заметки
 

@@ -1,7 +1,4 @@
 {
   "cssTheme": "Minimal",
-  "enabledCssSnippets": [
-    "wide-tables",
-    "wide-containers"
-  ]
+  "enabledCssSnippets": []
 }
