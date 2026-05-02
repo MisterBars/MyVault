@@ -1,16 +1,15 @@
 ---
 type: module
-status: planned
-done_date:
-project:
+status: done
+done_date: 2026-02-05
+project: "[[Учёт ВВТ]]"
 skill: vba
 tags:
   - module
   - skill/vba
-reward_xp: 50   # или 100/150 для более жирных вещей
+reward_xp: 50
 ---
 # Модуль
-
 ## Назначение
 
 Кратко, за что отвечает модуль, какие задачи решает.
@@ -226,6 +225,77 @@ if (rows.length === 0) {
 ```
 # Код
 ```vba
+Option Explicit
+
+' =========================
+' Аудит
+' =========================
+
+Public Sub WriteAuditEvent( _
+    ByVal db As DAO.Database, _
+    ByVal tableName As String, _
+    ByVal RecordID As Long, _
+    ByVal fieldName As Variant, _
+    ByVal oldValue As Variant, _
+    ByVal newValue As Variant, _
+    ByVal actionType As String, _
+    ByVal businessEventType As String, _
+    ByVal changedByUserId As Long, _
+    Optional ByVal changeRequestId As Variant)
+
+    Dim rs As DAO.Recordset
+
+    Set rs = db.OpenRecordset("AuditLog", dbOpenDynaset, dbAppendOnly)
+    rs.AddNew
+
+    rs.Fields("TableName").Value = Left$(NzStr(tableName), 100)
+    rs.Fields("RecordID").Value = RecordID
+
+    If Not IsMissingOrNull(fieldName) Then
+        rs.Fields("FieldName").Value = Left$(NzStr(fieldName), 100)
+    End If
+
+    If Not IsMissingOrNull(oldValue) Then
+        rs.Fields("OldValue").Value = NzStr(oldValue)
+    End If
+
+    If Not IsMissingOrNull(newValue) Then
+        rs.Fields("NewValue").Value = NzStr(newValue)
+    End If
+
+    rs.Fields("ActionType").Value = Left$(NzStr(actionType), 10)
+    rs.Fields("BusinessEventType").Value = Left$(NzStr(businessEventType), 50)
+
+    If changedByUserId > 0 Then
+        rs.Fields("ChangedByUserID").Value = changedByUserId
+    End If
+
+    If Not IsMissingOrNull(changeRequestId) Then
+        rs.Fields("ChangeRequestID").Value = CLng(changeRequestId)
+    End If
+    
+    On Error Resume Next
+    rs.Fields("WorkstationName").Value = Left$(Environ$("COMPUTERNAME"), 100)
+    On Error GoTo 0
+
+    rs.Update
+    rs.Close
+    Set rs = Nothing
+End Sub
+
+Private Function IsMissingOrNull(ByVal v As Variant) As Boolean
+    If IsObject(v) Then
+        IsMissingOrNull = (v Is Nothing)
+    ElseIf IsNull(v) Then
+        IsMissingOrNull = True
+    ElseIf IsEmpty(v) Then
+        IsMissingOrNull = True
+    ElseIf VarType(v) = vbString Then
+        IsMissingOrNull = (Trim$(CStr(v)) = vbNullString)
+    Else
+        IsMissingOrNull = False
+    End If
+End Function
 
 ```
 
