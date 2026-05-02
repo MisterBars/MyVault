@@ -16,8 +16,8 @@ status: active
 
 ```dataview
 TABLE status as "Статус", deadline as "Срок"
-FROM "10 Projects"
-WHERE type = "project" AND status = "active" AND contains(file.outlinks, this.file.link)
+FROM ""
+WHERE type = "project" AND status = "active" AND contains(file.outlinks, this.file.link) AND !contains(file.path, "90 Templates")
 SORT deadline ASC
 ```
 

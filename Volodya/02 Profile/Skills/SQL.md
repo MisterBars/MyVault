@@ -1,7 +1,7 @@
 ---
 type: skill
-skill_id: linux
-title: Linux
+skill_id: sql
+title: SQL
 tags:
-  - skill/linux
+  - skill/sql
 ---

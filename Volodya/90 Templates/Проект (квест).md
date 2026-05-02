@@ -17,8 +17,8 @@ tags:
 
 ```dataview
 TABLE status as "Статус", task_type as "Тип", deadline as "Срок"
-FROM "11 Tasks"
-WHERE type = "task" AND project = this.file.link
+FROM ""
+WHERE type = "task" AND project = this.file.link AND !contains(file.path, "90 Templates") AND !contains(file.path, "40 Archives")
 SORT deadline ASC
 ```
 
