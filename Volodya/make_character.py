@@ -1,22 +1,21 @@
----
+import os
+
+md = open("01 Dashboard/Персонаж.md", "w", encoding="utf-8")
+
+md.write("""---
 type: character
 name: Имя
 class: Архитектор-разработчик
 xp_total: 0
 level: 1
 ---
-##Автоматический подсчет опыта c выполненных задач
-```dataviewjs
-const tasks = dv.pages()
-    .where(p => p.type === "task" && p.status === "done" && !p.file.path.includes("90 Templates"));
-const totalXP = tasks.array().reduce((sum, t) => sum + (t.xp || 10), 0);
-dv.paragraph("Всего заработано: **" + totalXP + " XP**");
-```
 
 # Персонаж
 
-```dataviewjs
-const p = dv.current();
+""")
+
+md.write("```dataviewjs\n")
+md.write("""const p = dv.current();
 const xp = p.xp_total || 0;
 const lvls =;[6][7]
 let lv = 1;
@@ -39,12 +38,12 @@ const bf = dv.el("div","",{container:bw});
 bf.style.cssText = "background:#7c6bea;width:"+pct+"%;height:12px;border-radius:4px";
 const inf = dv.el("div",(xp-xpA)+" / "+(xpB-xpA)+" XP до уровня "+(lv+1),{container:wrap});
 inf.style.cssText = "color:var(--text-muted);font-size:0.85em";
-```
+""")
+md.write("```\n\n")
 
-## Навыки
-
-```dataviewjs
-const skills = dv.pages('"02 Profile/Skills"').where(p => p.type === "skill");
+md.write("## Навыки\n\n")
+md.write("```dataviewjs\n")
+md.write("""const skills = dv.pages('"02 Profile/Skills"').where(p => p.type === "skill");
 const wrap2 = dv.el("div","",{});
 wrap2.style.cssText = "padding:12px;background:var(--background-secondary);border-radius:8px;border:1px solid var(--background-modifier-border)";
 const clrs = {1:"#888888",2:"#4caf50",3:"#2196f3",4:"#9c27b0",5:"#ff9800"};
@@ -65,23 +64,24 @@ for (const s of skills) {
     const bf2 = dv.el("div","",{container:bw2});
     bf2.style.cssText = "background:"+color+";width:"+pct2+"%;height:8px;border-radius:4px";
 }
-```
+""")
+md.write("```\n\n")
 
-## Активные квесты
+md.write("## Активные квесты\n\n")
+md.write("```dataview\n")
+md.write('TABLE deadline as "Срок", reward_xp as "Награда XP"\n')
+md.write('FROM "10 Projects"\n')
+md.write('WHERE type = "project" AND status = "active"\n')
+md.write("SORT deadline ASC\n")
+md.write("```\n\n")
 
-```dataview
-TABLE deadline as "Срок", reward_xp as "Награда XP"
-FROM "10 Projects"
-WHERE type = "project" AND status = "active"
-SORT deadline ASC
-```
+md.write("## Последние достижения\n\n")
+md.write("```dataview\n")
+md.write('TABLE date as "Дата", reward as "Награда"\n')
+md.write('FROM "02 Profile/Achievements"\n')
+md.write('WHERE type = "achievement"\n')
+md.write("SORT date DESC\nLIMIT 5\n")
+md.write("```\n")
 
-## Последние достижения
-
-```dataview
-TABLE date as "Дата", reward as "Награда"
-FROM "02 Profile/Achievements"
-WHERE type = "achievement"
-SORT date DESC
-LIMIT 5
-```
+md.close()
+print("Файл создан успешно")
