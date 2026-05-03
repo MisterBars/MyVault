@@ -198,21 +198,47 @@ statCard("Строк кода", totalCodeLines);
 ```dataviewjs
 const project = dv.current();
 
-// Модули/формы/классы проекта
+// ===== Настройки =====
+
+const CODE_TYPES = ["module", "class", "form"];
+const EVENT_TYPES = ["form"];
+const MAGIC_ENTRY_NAMES = new Set([
+  "Auto_Open",
+  "Workbook_Open",
+  "Workbook_BeforeClose",
+  "Workbook_BeforeSave"
+]);
+const EVENT_MODULE_NAMES = new Set([
+  "ThisWorkbook"
+]);
+const ROOT_PROCS = new Set([
+  "CreateVVTDatabase"
+]);
+
+// ===== Сбор модулей =====
+
 const modules = dv.pages()
   .where(x =>
-    (x.type === "module" || x.type === "form" || x.type === "class") &&
+    CODE_TYPES.includes(x.type) &&
     x.project &&
     x.project.path === project.file.path
   )
   .array();
 
-// Регулярка объявления процедур/функций
-const reProcDecl = /^\s*(?:(Public|Private)\s+)?(?:Static\s+)?(Sub|Function)\s+([A-Za-z0-9_]+)/i;
+if (modules.length === 0) {
+  dv.paragraph("В проекте не найдено кодовых модулей.");
+  return;
+}
 
-// Загружаем тексты модулей и собираем процедуры
+const reProcDecl = /^\s*(?:(Public|Private)\s+)?(?:Static\s+)?(Sub|Function)\s+([A-Za-z0-9_]+)/i;
+const reDimAsClass = /Dim\s+\w+\s+As\s+([A-Za-z0-9_]+)/ig;
+const reNewClass = /New\s+([A-Za-z0-9_]+)/ig;
+
+// структуры
 let modulesText = [];
-let allProcs = [];  // {name, modulePath, moduleName}
+let procs = []; // { id, name, modulePath, moduleName, isEventModule, isClassModule, isMagicEntry, visibility }
+let classes = new Set();
+let classModulesByName = new Map();
 
 for (const m of modules) {
   let text = "";
@@ -222,37 +248,87 @@ for (const m of modules) {
     console.error("Ошибка загрузки файла", m.file.path, e);
   }
 
-  modulesText.push({
-    page: m,
-    text
-  });
+  modulesText.push({ page: m, text });
+
+  const isEventModule =
+    EVENT_TYPES.includes(m.type) || EVENT_MODULE_NAMES.has(m.file.name);
+  const isClassModule = m.type === "class";
+
+  if (isClassModule) {
+    classes.add(m.file.name);
+    if (!classModulesByName.has(m.file.name)) {
+      classModulesByName.set(m.file.name, []);
+    }
+    classModulesByName.get(m.file.name).push(m.file.path);
+  }
 
   const lines = text.split("\n");
   for (const raw of lines) {
     const match = reProcDecl.exec(raw);
     if (match) {
+      const visibility = (match[1] || "Public").toLowerCase();
       const procName = match[3];
-      allProcs.push({
+
+      procs.push({
+        id: `${m.file.path}::${procName}`,
         name: procName,
         modulePath: m.file.path,
-        moduleName: m.file.name
+        moduleName: m.file.name,
+        isEventModule,
+        isClassModule,
+        isMagicEntry: MAGIC_ENTRY_NAMES.has(procName),
+        visibility
       });
     }
   }
 }
 
-// Для каждой процедуры ищем вхождения её имени в других модулях
-function isProcUsed(proc, modulesText) {
-  const name = proc.name;
+if (procs.length === 0) {
+  dv.paragraph("В проекте не найдено ни одной процедуры/функции.");
+  return;
+}
 
-  // простая эвристика: ищем имя как отдельное слово
-  const reWord = new RegExp(`\\b${name}\\b`, "i");
+// ===== Классы, от которых создают объекты =====
 
+const liveClasses = new Set();
+
+for (const mt of modulesText) {
+  const text = mt.text;
+
+  let m1;
+  while ((m1 = reDimAsClass.exec(text)) !== null) {
+    const className = m1[1];
+    if (classes.has(className)) {
+      liveClasses.add(className);
+    }
+  }
+
+  let m2;
+  while ((m2 = reNewClass.exec(text)) !== null) {
+    const className = m2[1];
+    if (classes.has(className)) {
+      liveClasses.add(className);
+    }
+  }
+}
+
+// ===== Быстрый фильтр кандидатов (как раньше) =====
+
+let candidates = procs.filter(p => {
+  if (p.visibility !== "private") return false;
+  if (p.isEventModule) return false;
+  if (p.isMagicEntry) return false;
+  if (ROOT_PROCS.has(p.name)) return false;
+  if (p.isClassModule && liveClasses.has(p.moduleName)) return false;
+  return true;
+});
+
+// ===== Умная проверка для кандидатов: есть ли реальные упоминания имени =====
+
+// Функция: есть ли упоминание имени процедуры где‑то в коде
+function isNameUsedSomewhere(procName) {
+  const reWord = new RegExp(`\\b${procName}\\b`, "i");
   for (const mt of modulesText) {
-    // пропускаем собственный модуль, если хочешь только внешние вызовы
-    // если нужно учитывать и самовызовы, эту проверку можно убрать
-    if (mt.page.file.path === proc.modulePath) continue;
-
     if (reWord.test(mt.text)) {
       return true;
     }
@@ -260,14 +336,19 @@ function isProcUsed(proc, modulesText) {
   return false;
 }
 
-const deadProcs = [];
-for (const p of allProcs) {
-  if (!isProcUsed(p, modulesText)) {
-    deadProcs.push(p);
+// Разделяем кандидатов на “точно мёртвых” и “имеют упоминания”
+let trulyDead = [];
+let referencedButFlagged = [];
+
+for (const p of candidates) {
+  if (isNameUsedSomewhere(p.name)) {
+    referencedButFlagged.push(p);
+  } else {
+    trulyDead.push(p);
   }
 }
 
-// ===== Рендер блока с карточкой и списком =====
+// ===== Рендер =====
 
 const wrap = dv.el("div", "", {});
 wrap.style.cssText = `
@@ -278,43 +359,56 @@ wrap.style.cssText = `
   border: 1px solid var(--background-modifier-border);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 `;
 
-const header = dv.el("div", "Мёртвый код (процедуры без вызовов)", { container: wrap });
+// Заголовок
+const header = dv.el("div", "Анализ мёртвого кода (Private)", { container: wrap });
 header.style.cssText = `
   font-size: 0.95em;
   font-weight: 600;
   color: var(--text-normal);
 `;
 
-const sub = dv.el(
+// Сводка
+const summary = dv.el(
   "div",
-  deadProcs.length === 0
-    ? "Все процедуры где-то упоминаются / вызываются."
-    : `Процедур без найденных вызовов: ${deadProcs.length}`,
+  `Всего Private‑кандидатов: ${candidates.length}. ` +
+    `Точно без упоминаний: ${trulyDead.length}. ` +
+    `Есть упоминания в коде: ${referencedButFlagged.length}.`,
   { container: wrap }
 );
-sub.style.cssText = `
+summary.style.cssText = `
   font-size: 0.85em;
   color: var(--text-muted);
 `;
 
-// карточка со списком
-if (deadProcs.length > 0) {
-  const listCard = dv.el("div", "", { container: wrap });
-  listCard.style.cssText = `
+// Блок 1: точно мёртвые (ни одного упоминания имени)
+const deadHeader = dv.el(
+  "div",
+  "1) Точно мёртвые (имя нигде не встречается):",
+  { container: wrap }
+);
+deadHeader.style.cssText = `
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--text-normal);
+`;
+
+if (trulyDead.length > 0) {
+  const listDead = dv.el("div", "", { container: wrap });
+  listDead.style.cssText = `
     padding: 8px 10px;
     background: var(--background-primary);
     border-radius: 8px;
     border: 1px solid var(--background-modifier-border);
-    max-height: 240px;
+    max-height: 200px;
     overflow-y: auto;
     font-size: 0.85em;
   `;
 
-  for (const p of deadProcs) {
-    const row = dv.el("div", "", { container: listCard });
+  for (const p of trulyDead) {
+    const row = dv.el("div", "", { container: listDead });
     row.style.cssText = `
       display: flex;
       justify-content: space-between;
@@ -334,6 +428,65 @@ if (deadProcs.length > 0) {
       margin-left: 8px;
     `;
   }
+} else {
+  const empty = dv.el("div", "— таких не найдено", { container: wrap });
+  empty.style.cssText = `
+    font-size: 0.85em;
+    color: var(--text-muted);
+  `;
+}
+
+// Блок 2: есть упоминания имени (нужна ручная проверка)
+const refHeader = dv.el(
+  "div",
+  "2) Есть упоминания имени (посмотреть вручную):",
+  { container: wrap }
+);
+refHeader.style.cssText = `
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--text-normal);
+`;
+
+if (referencedButFlagged.length > 0) {
+  const listRef = dv.el("div", "", { container: wrap });
+  listRef.style.cssText = `
+    padding: 8px 10px;
+    background: var(--background-primary);
+    border-radius: 8px;
+    border: 1px solid var(--background-modifier-border);
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 0.85em;
+  `;
+
+  for (const p of referencedButFlagged) {
+    const row = dv.el("div", "", { container: listRef });
+    row.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--background-modifier-border);
+    `;
+
+    const left = dv.el("div", p.name, { container: row });
+    left.style.cssText = `
+      font-weight: 500;
+      color: var(--text-normal);
+    `;
+
+    const right = dv.el("div", p.moduleName, { container: row });
+    right.style.cssText = `
+      color: var(--text-muted);
+      margin-left: 8px;
+    `;
+  }
+} else {
+  const empty2 = dv.el("div", "— таких не найдено", { container: wrap });
+  empty2.style.cssText = `
+    font-size: 0.85em;
+    color: var(--text-muted);
+  `;
 }
 ```
 

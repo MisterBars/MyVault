@@ -53,40 +53,26 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10 Projects/Учёт ВВТ/Учёт ВВТ.md",
+                "file": "90 Templates/VBA/Проект (квест) VBA.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Учёт ВВТ"
+              "title": "Проект (квест) VBA"
             }
           },
           {
-            "id": "647e532334b0a7a0",
+            "id": "1e2c862aa441ca1f",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10 Projects/Учёт ВВТ/Формы/F_Menu.md",
+                "file": "10 Projects/Учёт ВВТ/Модули/ModSession.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "F_Menu"
-            }
-          },
-          {
-            "id": "d789ed34b5b5ef7e",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "10 Projects/Учёт ВВТ/Модули/Main.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Main"
+              "title": "ModSession"
             }
           }
         ],
@@ -300,17 +286,18 @@
       "periodic-notes:Open today": false
     }
   },
-  "active": "639a5a5b07aa4ec2",
+  "active": "85d565c743a63ac2",
   "lastOpenFiles": [
-    "10 Projects/Учёт ВВТ/Модули/ModNomenclatureTypes.md",
     "10 Projects/Учёт ВВТ/Учёт ВВТ.md",
+    "10 Projects/Учёт ВВТ/Модули/ModSession.md",
     "10 Projects/Учёт ВВТ/Формы/F_Menu.md",
+    "10 Projects/Учёт ВВТ/Модули/Main.md",
+    "10 Projects/Учёт ВВТ/Модули/ModNomenclatureTypes.md",
     "10 Projects/Учёт ВВТ/Прогресс проекта.md",
     "10 Projects/Учёт ВВТ/Модули/ModDocuments.md",
     "10 Projects/Учёт ВВТ/Модули/ModInventory.md",
     "10 Projects/Учёт ВВТ/Модули/ModMetals.md",
     "10 Projects/Учёт ВВТ/Модули/ModChangeRequests.md",
-    "10 Projects/Учёт ВВТ/Модули/Main.md",
     "10 Projects/Учёт ВВТ/Модули/ThisWorkbook.md",
     "10 Projects/Учёт ВВТ/Модули/ModMenuAction.md",
     "10 Projects/Учёт ВВТ/Модули/ModCreateDB.md",
@@ -327,7 +314,6 @@
     "10 Projects/Учёт ВВТ/Модули/ModMenuDynamic.md",
     "10 Projects/Учёт ВВТ/Модули/ModFiles.md",
     "01 Dashboard/Персонаж.md",
-    "10 Projects/Учёт ВВТ/Модули/Mod_F_Change.md",
     "textgenerator/templates/trash/awesomePrompts",
     "textgenerator/templates/trash",
     "textgenerator/templates/tts",
