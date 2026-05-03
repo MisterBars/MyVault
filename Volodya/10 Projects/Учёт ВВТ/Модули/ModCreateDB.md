@@ -10,18 +10,13 @@ tags:
 reward_xp: 50
 ---
 # Модуль
-
 ## Назначение
-
-Кратко, за что отвечает модуль, какие задачи решает.
+- Для создания пустой БД с готовой структурой и поддержкой старых форматов.
 
 ## Важные решения
-
-- Почему выбрана такая архитектура.
-- Комментарии по производительности/ограничениям.
-
+- Есть возможность развернуть проект на новом рабочем месте.
+- Всегда создает БД через библиотеку 2010 года, чтобы избегать конфликт версий 2007 и новее.
 ## Задачи по модулю
-
 ```dataview
 TABLE status as "Статус", task_type as "Тип", deadline as "Срок"
 FROM ""
@@ -30,7 +25,6 @@ SORT deadline ASC
 ```
 
 ## Взаимосвязи (исходящие вызовы)
-
 ```dataviewjs
 // Какие типы считаем VBA-кодом
 const TYPES = ['module', 'form', 'class'];
@@ -164,6 +158,7 @@ if (rows.length === 0) {
   );
 }
 ```
+
 # Функции и процедуры
 ```dataviewjs
 const page = dv.current();
@@ -271,30 +266,19 @@ if (rows.length === 0) {
   );
 }
 ```
+
 # Код
 ```vba
 ' @desc: **что делает конкретно эта процедура**
 ' @role: **какое место она занимает в системе**
 ' @todo: **заметка по процедуре/функции**
 
-
-' ============================================================
-' Модуль: modCreateDB  (v2 — исправлена ошибка "too many line continuations")
-' Запускать из Excel VBA
-' Единственное требование: Microsoft ACE OLE DB Provider
-'   (входит в состав Access 2007+ или ставится через
-'    бесплатный "Microsoft Access Database Engine 2010 Redistributable")
-' ============================================================
 Option Explicit
 
-' ----------------------------------------------------------------
-' Точка входа — вызывать из Excel
-' ----------------------------------------------------------------
 Public Sub CreateVVTDatabase()
-' @desc: Создает чистую БД проекта
-' @role: **какое место она занимает в системе**
-' @todo: **заметка по процедуре/функции**
-    ' *** Укажи путь к БД в сетевой папке ***
+' @desc: Точка входа — вызывать из Excel
+' @role: Init
+' @todo: --
     Dim DB_PATH As String
     DB_PATH = ThisWorkbook.Path & "\vvt_db.accdb"
     If CreateAccessDB(DB_PATH) Then
@@ -306,10 +290,10 @@ Public Sub CreateVVTDatabase()
     CreateVVTMenu
 End Sub
 
-' ----------------------------------------------------------------
-' Создаёт пустой .accdb через ADOX (late binding)
-' ----------------------------------------------------------------
 Private Function CreateAccessDB(sPath As String) As Boolean
+' @desc: Создает чистую БД проекта
+' @role: Service
+' @todo: --
     Dim oCat As Object
     On Error GoTo ErrHandler
     If Dir(sPath) <> "" Then
@@ -325,10 +309,10 @@ ErrHandler:
     ShowError "Ошибка создания файла БД.", Err.Number, Err.description
 End Function
 
-' ----------------------------------------------------------------
-' Открывает соединение и выполняет DDL по очереди
-' ----------------------------------------------------------------
 Private Sub RunAllDDL(sPath As String)
+' @desc: Открывает соединение и выполняет DDL по очереди
+' @role: Init
+' @todo: --
     Dim oCn  As Object
     Dim oCmd As Object
     Dim aSQL() As String
@@ -359,10 +343,10 @@ ErrHandler:
            Left(aSQL(i), 300), Err.Number, Err.description
 End Sub
 
-' ----------------------------------------------------------------
-' Возвращает массив DDL-запросов в правильном порядке
-' ----------------------------------------------------------------
 Private Function GetDDLStatements() As String()
+' @desc: Возвращает массив DDL-запросов в правильном порядке
+' @role: Init
+' @todo: --
     Dim s(200) As String
     Dim n As Long
     n = 0
