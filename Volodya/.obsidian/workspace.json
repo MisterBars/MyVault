@@ -27,7 +27,7 @@
               "type": "markdown",
               "state": {
                 "file": "01 Dashboard/Персонаж.md",
-                "mode": "source",
+                "mode": "preview",
                 "source": false
               },
               "pinned": true,
@@ -68,7 +68,7 @@
             }
           }
         ],
-        "currentTab": 3
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -274,11 +274,13 @@
       "templater-obsidian:Templater": false,
       "table-editor-obsidian:Advanced Tables Toolbar": false,
       "obsidian-git:Open Git source control": false,
-      "obsidian-kanban:Create new board": false
+      "obsidian-kanban:Create new board": false,
+      "periodic-notes:Open today": false
     }
   },
-  "active": "e4de80a53c52612b",
+  "active": "20678d6aef89d523",
   "lastOpenFiles": [
+    "30 Resources/VBA/Role sub or function.md",
     "10 Projects/Учёт ВВТ/Модули/ModServices.md",
     "90 Templates/VBA/Таблица Access.md",
     "10 Projects/Учёт ВВТ/Схема проекта.md",
@@ -290,7 +292,6 @@
     "10 Projects/Учёт ВВТ/Формы/F_Change.md",
     "10 Projects/Учёт ВВТ/Учёт ВВТ.md",
     "10 Projects/Учёт ВВТ/Модули/ModRoles.md",
-    "30 Resources/VBA/Role sub or function.md",
     "10 Projects/Учёт ВВТ/Модули/ModNomenclatures.md",
     "10 Projects/Учёт ВВТ/Модули/ModRef.md",
     "10 Projects/Учёт ВВТ/Модули/ModNomenclatureTypes.md",
