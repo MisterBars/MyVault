@@ -12,11 +12,9 @@ reward_xp: 50
 # Модуль
 
 ## Назначение
-- Кратко, за что отвечает модуль, какие задачи решает.
+- Отвечает за CRUD номенклатур
 
 ## Важные решения
-- Почему выбрана такая архитектура.
-- Комментарии по производительности/ограничениям.
 
 ## Задачи по модулю
 ```dataview
@@ -693,6 +691,9 @@ Public Sub DeleteNomenclatureSafe(ByVal nomenclatureID As Long, ByVal changedByU
     Dim rs As DAO.Recordset
     Dim info As NomenclatureInfo
     Dim cnt As Long
+' @desc: Безопасное удаление номенклатуры
+' @role: Query.Delete
+' @todo: --
 
     If nomenclatureID <= 0 Then
         ShowWarning "Некорректный NomenclatureID."
@@ -748,6 +749,9 @@ End Sub
 Public Function GetAllNomenclatures(Optional ByVal nomenclatureTypeID As Long = 0) As DAO.Recordset
     Dim db As DAO.Database
     Dim sql As String
+' @desc: Получение списка всех номенклатур
+' @role: Query.Read
+' @todo: --
 
     Set db = OpenCurrentDb()
 

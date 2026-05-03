@@ -11,11 +11,9 @@ reward_xp: 50
 ---
 # Модуль
 ## Назначение
-Кратко, за что отвечает модуль, какие задачи решает.
+- Отвечает за CRUD типов номенклатур
 
 ## Важные решения
-- Почему выбрана такая архитектура.
-- Комментарии по производительности/ограничениям.
 
 ## Задачи по модулю
 ```dataview
@@ -354,6 +352,9 @@ Private Const FLD_DESC As String = "Description"
 Private Const FLD_ACTIVE As String = "IsActive"
 
 Private Sub ValidateNomenclatureTypeInput(ByVal typeName As String, ByVal typeCode As String, ByVal description As String)
+' @desc: Проверяет ввод типа номенклатуры
+' @role: Validate
+' @todo: --
     typeName = Trim$(typeName)
     typeCode = Trim$(typeCode)
     Dim message As String
@@ -378,6 +379,9 @@ Private Sub ValidateNomenclatureTypeInput(ByVal typeName As String, ByVal typeCo
 End Sub
 
 Public Function GetNomenclatureTypeById(ByVal nomenclatureTypeID As Long) As NomenclatureTypeInfo
+' @desc: Получает тип номенклатуры по ID
+' @role: Query.Read
+' @todo: --
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     Dim info As NomenclatureTypeInfo
@@ -406,6 +410,9 @@ Public Function GetNomenclatureTypeById(ByVal nomenclatureTypeID As Long) As Nom
 End Function
 
 Public Function GetNomenclatureTypeIdByName(ByVal typeName As String) As Long
+' @desc: Получает тип номенклатуры по имени
+' @role: Query.Read
+' @todo: --
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
 
@@ -427,6 +434,9 @@ Public Function GetNomenclatureTypeIdByName(ByVal typeName As String) As Long
 End Function
 
 Public Function GetNomenclatureTypeIdByCode(ByVal typeCode As String) As Long
+' @desc: Получает тип номенклатуры по коду
+' @role: Query.Read
+' @todo: --
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
 
@@ -448,6 +458,9 @@ Public Function GetNomenclatureTypeIdByCode(ByVal typeCode As String) As Long
 End Function
 
 Public Function NomenclatureTypeNameExists(ByVal typeName As String, Optional ByVal excludeID As Long = 0, Optional ByVal db As DAO.Database = Nothing) As Boolean
+' @desc: Проверяет существование типа номенклатуры по имени
+' @role: Query.Read
+' @todo: --
     Dim ownDb As Boolean
     Dim rs As DAO.Recordset
     Dim sql As String
@@ -474,6 +487,9 @@ Public Function NomenclatureTypeNameExists(ByVal typeName As String, Optional By
 End Function
 
 Public Function NomenclatureTypeCodeExists(ByVal typeCode As String, Optional ByVal excludeID As Long = 0, Optional ByVal db As DAO.Database = Nothing) As Boolean
+' @desc: Проверяет существование типа номенклатуры по коду
+' @role: Query.Read
+' @todo: --
     Dim ownDb As Boolean
     Dim rs As DAO.Recordset
     Dim sql As String
@@ -505,6 +521,9 @@ Public Function CreateNomenclatureType( _
     ByVal description As String, _
     ByVal isActive As Boolean, _
     ByVal changedByUserId As Long) As Long
+' @desc: Безопасное создание типа номенклатуры
+' @role: Query.Write
+' @todo: --
 
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
@@ -588,6 +607,9 @@ Public Sub UpdateNomenclatureType( _
     ByVal newDescription As String, _
     ByVal newIsActive As Boolean, _
     ByVal changedByUserId As Long)
+' @desc: Безопасное обновление типа номенклатуры
+' @role: Query.Update
+' @todo: --
 
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
@@ -694,6 +716,9 @@ EH:
 End Sub
 
 Public Sub DeleteNomenclatureTypeSafe(ByVal nomenclatureTypeID As Long, ByVal changedByUserId As Long)
+' @desc: Безопасное удаление типа номенклатуры
+' @role: Query.Write
+' @todo: --
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
@@ -752,6 +777,9 @@ EH:
 End Sub
 
 Public Function GetAllNomenclatureTypes(Optional ByVal onlyActive As Boolean = False) As DAO.Recordset
+' @desc: Получение списка всех типов номенклатур
+' @role: Query.Read
+' @todo: --
     Dim db As DAO.Database
     Dim sql As String
 

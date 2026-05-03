@@ -12,16 +12,13 @@ reward_xp: 50
 # Модуль
 
 ## Назначение
-
-Кратко, за что отвечает модуль, какие задачи решает.
+- Автоматическое подключение необходимых библиотек при запуске надстройки.
 
 ## Важные решения
-
-- Почему выбрана такая архитектура.
-- Комментарии по производительности/ограничениям.
+- Нельзя отключать битые надстройки, так как код выполняться попросту прекращает
+- Можно сделать отдельную кнопку или при закрытии отключение всех библиотек
 
 ## Задачи по модулю
-
 ```dataview
 TABLE status as "Статус", task_type as "Тип", deadline as "Срок"
 FROM ""
@@ -30,7 +27,6 @@ SORT deadline ASC
 ```
 
 ## Взаимосвязи (исходящие вызовы)
-
 ```dataviewjs
 const TYPES = ['module', 'form', 'class'];
 
@@ -339,16 +335,14 @@ if (rows.length === 0) {
 ' @role: **какое место она занимает в системе**
 ' @todo: **заметка по процедуре/функции**
 
-
-' === МОДУЛЬ ПОДКЛЮЧЕНИЯ БИБЛИОТЕК МОЖНО ВЫЗЫВАТЬ ИЗ ДРУГИХ НАДСТРОЕК ===
 Option Explicit
 
 Public Sub ConfigureReferencesForAddIn(targetProject As Object, Optional version As Integer)
+' @desc: Точка входа - запуск подключения библиотек
+' @role: Init
+' @todo: --
     On Error Resume Next
     Application.EnableEvents = False
-    
-    ' Удаляем недействительные зависимости
-    RemoveBrokenReferences targetProject
     
     ' Добавляем необходимые зависимости
     AddRequiredReferences targetProject, version
@@ -357,17 +351,10 @@ Public Sub ConfigureReferencesForAddIn(targetProject As Object, Optional version
     On Error GoTo 0
 End Sub
 
-
-Sub RemoveBrokenReferences(targetProject As Object)
-    Dim i As Long
-    For i = targetProject.References.Count To 1 Step -1
-        If targetProject.References(i).IsBroken Then
-            targetProject.References.Remove targetProject.References(i)
-        End If
-    Next i
-End Sub
-
 Sub AddRequiredReferences(targetProject As Object, version As Integer)
+' @desc: Подключение библиотек
+' @role: Init
+' @todo: --
     Dim excelVersion As Integer
     excelVersion = version 'Val(Application.version)
     
@@ -417,6 +404,9 @@ Sub AddRequiredReferences(targetProject As Object, version As Integer)
 End Sub
 
 Sub AddReferenceByExactName(targetProject As Object, refName As String)
+' @desc: Подключение библиотек по имени
+' @role: Init
+' @todo: --
     Dim ref As Object
     Dim exists As Boolean
     Dim i As Long

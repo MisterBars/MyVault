@@ -359,15 +359,15 @@ Public Sub WriteAuditEvent( _
     rs.Fields("TableName").Value = Left$(NzStr(tableName), 100)
     rs.Fields("RecordID").Value = RecordID
 
-    If Not IsMissingOrNull(fieldName) Then
+    If Not IsMissingOrNullA(fieldName) Then
         rs.Fields("FieldName").Value = Left$(NzStr(fieldName), 100)
     End If
 
-    If Not IsMissingOrNull(oldValue) Then
+    If Not IsMissingOrNullA(oldValue) Then
         rs.Fields("OldValue").Value = NzStr(oldValue)
     End If
 
-    If Not IsMissingOrNull(newValue) Then
+    If Not IsMissingOrNullA(newValue) Then
         rs.Fields("NewValue").Value = NzStr(newValue)
     End If
 
@@ -378,7 +378,7 @@ Public Sub WriteAuditEvent( _
         rs.Fields("ChangedByUserID").Value = changedByUserId
     End If
 
-    If Not IsMissingOrNull(changeRequestId) Then
+    If Not IsMissingOrNullA(changeRequestId) Then
         rs.Fields("ChangeRequestID").Value = CLng(changeRequestId)
     End If
     
@@ -391,23 +391,22 @@ Public Sub WriteAuditEvent( _
     Set rs = Nothing
 End Sub
 
-Private Function IsMissingOrNull(ByVal v As Variant) As Boolean
+Private Function IsMissingOrNullA(ByVal v As Variant) As Boolean
 ' @desc: Проверка не пустое ли значение
 ' @role: Validation
 ' @todo: --
     If IsObject(v) Then
-        IsMissingOrNull = (v Is Nothing)
+        IsMissingOrNullA = (v Is Nothing)
     ElseIf IsNull(v) Then
-        IsMissingOrNull = True
+        IsMissingOrNullA = True
     ElseIf IsEmpty(v) Then
-        IsMissingOrNull = True
+        IsMissingOrNullA = True
     ElseIf VarType(v) = vbString Then
-        IsMissingOrNull = (Trim$(CStr(v)) = vbNullString)
+        IsMissingOrNullA = (Trim$(CStr(v)) = vbNullString)
     Else
-        IsMissingOrNull = False
+        IsMissingOrNullA = False
     End If
 End Function
-
 ```
 
 ## Черновые заметки

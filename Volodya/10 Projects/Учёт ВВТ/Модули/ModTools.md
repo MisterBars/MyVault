@@ -18,7 +18,6 @@ reward_xp: 50
 - Комментарии по производительности/ограничениям.
 
 ## Задачи по модулю
-
 ```dataview
 TABLE status as "Статус", task_type as "Тип", deadline as "Срок"
 FROM ""
@@ -27,7 +26,6 @@ SORT deadline ASC
 ```
 
 ## Взаимосвязи (исходящие вызовы)
-
 ```dataviewjs
 const TYPES = ['module', 'form', 'class'];
 
@@ -348,8 +346,8 @@ Option Explicit
 ' Для булевых значений
 '       ChangeConstantInModSettings "ENABLE_FEATURE", True
 Sub ChangeConstantInModSettings(constantName As String, newValue As Variant)
-    ' @desc: Изменение значений констант
     On Error GoTo ErrorHandler
+    
     ' Получаем доступ к VBProject через CreateObject
     Dim vbProj As Object
     Set vbProj = ThisWorkbook.VBProject
@@ -370,7 +368,7 @@ Sub ChangeConstantInModSettings(constantName As String, newValue As Variant)
             
             ' Ищем константу в коде модуля
             For i = 1 To codeMod.CountOfLines
-                lineText = codeMod.lines(i, 1)
+                lineText = codeMod.Lines(i, 1)
                 
                 ' Проверяем, является ли строка объявлением константы
                 If InStr(1, lineText, "Const " & constantName & " ", vbTextCompare) > 0 Then
@@ -428,12 +426,10 @@ ErrorHandler:
 End Sub
 
 Public Function Q(ByVal s As String) As String
-	' @desc: Обёртка текста в запрос
     Q = "'" & Replace$(NzStr(s), "'", "''") & "'"
 End Function
 
 Public Function NzStr(ByVal v As Variant, Optional ByVal defaultValue As String = "") As String
-	' @desc: Ф
     If IsNull(v) Or IsEmpty(v) Then
         NzStr = defaultValue
     Else
@@ -481,12 +477,12 @@ Public Function QuoteSql(ByVal s As Variant) As String
 End Function
 
 Public Function IsMissingOrNull(ByVal v As Variant) As Boolean
-    If IsMissing(v) Then
-        IsMissingOrNull = True
+    If IsObject(v) Then
+        IsMissingOrNull = (v Is Nothing)
     ElseIf IsNull(v) Then
         IsMissingOrNull = True
-    ElseIf VarType(v) = vbString And vbArray = "" Then
-        IsMissingOrNull = True
+    ElseIf VarType(v) = vbString Then
+        IsMissingOrNull = (Trim$(CStr(v)) = "")
     Else
         IsMissingOrNull = False
     End If
@@ -526,7 +522,7 @@ Public Function BoolToSql(ByVal v As Boolean) As String
     End If
 End Function
 
-Public Sub ShowError(ByVal ProcName As String, _
+Public Sub ShowError(ByVal procName As String, _
                      Optional ByVal ErrNum As Long = 0, _
                      Optional ByVal ErrDesc As String = "", _
                      Optional ByVal ExtraInfo As String = "")
@@ -536,7 +532,7 @@ Public Sub ShowError(ByVal ProcName As String, _
     If ErrNum = 0 Then ErrNum = Err.Number
     If LenB(ErrDesc) = 0 Then ErrDesc = Err.description
     
-    s = "Ошибка в процедуре: " & ProcName & vbCrLf & _
+    s = "Ошибка в процедуре: " & procName & vbCrLf & _
         "Код ошибки: " & CStr(ErrNum) & vbCrLf & _
         "Описание: " & ErrDesc
     
@@ -574,7 +570,6 @@ End Function
 Public Function OpenWorkspace() As DAO.Workspace
     Set OpenWorkspace = DBEngine.Workspaces(0)
 End Function
-
 ```
 
 ## Черновые заметки
