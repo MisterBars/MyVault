@@ -11,13 +11,9 @@ reward_xp: 50
 ---
 # Модуль
 ## Назначение
-
-Кратко, за что отвечает модуль, какие задачи решает.
-
+- Для ведения логов изменений в БД
 ## Важные решения
-
-- Почему выбрана такая архитектура.
-- Комментарии по производительности/ограничениям.
+- функцию IsMissingOrNull пришлось продублировать, потому что редактор не видит основную
 
 ## Задачи по модулю
 
@@ -163,7 +159,8 @@ if (rows.length === 0) {
   );
 }
 ```
-# Функции и процедуры
+
+## Функции и процедуры
 ```dataviewjs
 const page = dv.current();
 const text = await dv.io.load(page.file.path);
@@ -270,7 +267,8 @@ if (rows.length === 0) {
   );
 }
 ```
-# Код
+
+## Код
 ```vba
 ' @desc: **что делает конкретно эта процедура**
 ' @role: **какое место она занимает в системе**
@@ -340,6 +338,9 @@ Public Sub WriteAuditEvent( _
 End Sub
 
 Private Function IsMissingOrNull(ByVal v As Variant) As Boolean
+' @desc: Запись логов изменений в БД
+' @role: Service
+' @todo: 
     If IsObject(v) Then
         IsMissingOrNull = (v Is Nothing)
     ElseIf IsNull(v) Then

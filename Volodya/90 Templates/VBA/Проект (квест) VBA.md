@@ -118,7 +118,6 @@ if (modules.length === 0) {
 ```
 
 ## Связанные задачи
-
 ```dataview
 TABLE status as "Статус", task_type as "Тип", deadline as "Срок"
 FROM ""
@@ -128,8 +127,7 @@ SORT deadline ASC
 
 ## Важные файлы
 - 1
-- 
-
+- 2
 ## Заметки
 
 ## Итог
