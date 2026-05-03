@@ -242,7 +242,7 @@ Public Sub WriteAuditEvent( _
     ByVal businessEventType As String, _
     ByVal changedByUserId As Long, _
     Optional ByVal changeRequestId As Variant)
-
+	' @desc: Функция записи логов в БД
     Dim rs As DAO.Recordset
 
     Set rs = db.OpenRecordset("AuditLog", dbOpenDynaset, dbAppendOnly)
