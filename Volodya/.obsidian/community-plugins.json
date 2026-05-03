@@ -7,5 +7,14 @@
   "calendar",
   "obsidian-git",
   "obsidian-kanban",
-  "quickadd"
+  "quickadd",
+  "obsidian-minimal-settings",
+  "editing-toolbar",
+  "highlightr-plugin",
+  "periodic-notes",
+  "better-word-count",
+  "obsidian-textgenerator-plugin",
+  "obsidian-emoji-toolbar",
+  "obsidian-checklist-plugin",
+  "image-converter"
 ]
