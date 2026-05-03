@@ -67,12 +67,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10 Projects/Учёт ВВТ/Прогресс проекта.md",
+                "file": "10 Projects/Учёт ВВТ/Формы/F_Menu.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Прогресс проекта"
+              "title": "F_Menu"
             }
           },
           {
@@ -296,13 +296,21 @@
       "templater-obsidian:Templater": false,
       "table-editor-obsidian:Advanced Tables Toolbar": false,
       "obsidian-git:Open Git source control": false,
-      "obsidian-kanban:Create new board": false
+      "obsidian-kanban:Create new board": false,
+      "periodic-notes:Open today": false
     }
   },
-  "active": "85d565c743a63ac2",
+  "active": "639a5a5b07aa4ec2",
   "lastOpenFiles": [
-    "10 Projects/Учёт ВВТ/Модули/Main.md",
+    "10 Projects/Учёт ВВТ/Модули/ModNomenclatureTypes.md",
     "10 Projects/Учёт ВВТ/Учёт ВВТ.md",
+    "10 Projects/Учёт ВВТ/Формы/F_Menu.md",
+    "10 Projects/Учёт ВВТ/Прогресс проекта.md",
+    "10 Projects/Учёт ВВТ/Модули/ModDocuments.md",
+    "10 Projects/Учёт ВВТ/Модули/ModInventory.md",
+    "10 Projects/Учёт ВВТ/Модули/ModMetals.md",
+    "10 Projects/Учёт ВВТ/Модули/ModChangeRequests.md",
+    "10 Projects/Учёт ВВТ/Модули/Main.md",
     "10 Projects/Учёт ВВТ/Модули/ThisWorkbook.md",
     "10 Projects/Учёт ВВТ/Модули/ModMenuAction.md",
     "10 Projects/Учёт ВВТ/Модули/ModCreateDB.md",
@@ -310,7 +318,6 @@
     "10 Projects/Учёт ВВТ/Формы/F_ChangeDB.md",
     "10 Projects/Учёт ВВТ/Формы/F_Change.md",
     "10 Projects/Учёт ВВТ/Формы/F_Auth.md",
-    "10 Projects/Учёт ВВТ/Прогресс проекта.md",
     "10 Projects/Учёт ВВТ/Модули/ModTransfers.md",
     "10 Projects/Учёт ВВТ/Модули/ModProducts.md",
     "10 Projects/Учёт ВВТ/Модули/ModDictionaries.md",
@@ -321,12 +328,6 @@
     "10 Projects/Учёт ВВТ/Модули/ModFiles.md",
     "01 Dashboard/Персонаж.md",
     "10 Projects/Учёт ВВТ/Модули/Mod_F_Change.md",
-    "50 Daily Notes/2026-05-03.md",
-    "10 Projects/Учёт ВВТ/Модули/ModTools.md",
-    "10 Projects/Учёт ВВТ/Модули/ModSession.md",
-    "10 Projects/Учёт ВВТ/Модули/ModServiceUsersBuffer.md",
-    "10 Projects/Учёт ВВТ/Модули/ModServices.md",
-    "10 Projects/Учёт ВВТ/Модули/ModRoles.md",
     "textgenerator/templates/trash/awesomePrompts",
     "textgenerator/templates/trash",
     "textgenerator/templates/tts",

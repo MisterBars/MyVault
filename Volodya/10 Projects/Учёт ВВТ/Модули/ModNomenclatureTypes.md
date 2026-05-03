@@ -308,17 +308,6 @@ Private Const FLD_CODE As String = "TypeCode"
 Private Const FLD_DESC As String = "Description"
 Private Const FLD_ACTIVE As String = "IsActive"
 
-Dim DB_PATH As String
-
-Private Function OpenCurrentDb() As DAO.Database
-    If SRV_LOC = False Then
-        DB_PATH = LOCAL_BASE
-    Else
-        DB_PATH = SERVER_BASE
-    End If
-    Set OpenCurrentDb = DBEngine.Workspaces(0).OpenDatabase(DB_PATH)
-End Function
-
 Private Sub ValidateNomenclatureTypeInput(ByVal typeName As String, ByVal typeCode As String, ByVal description As String)
     typeName = Trim$(typeName)
     typeCode = Trim$(typeCode)
