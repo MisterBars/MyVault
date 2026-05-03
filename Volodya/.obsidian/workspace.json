@@ -25,12 +25,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 Dashboard/Персонаж.md",
-                "mode": "preview",
+                "file": "10 Projects/Учёт ВВТ/Модули/ModFiles.md",
+                "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Персонаж"
+              "title": "ModFiles"
             }
           },
           {
@@ -67,26 +67,15 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10 Projects/Учёт ВВТ/Модули/ThisWorkbook.md",
+                "file": "10 Projects/Учёт ВВТ/Прогресс проекта.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "ThisWorkbook"
-            }
-          },
-          {
-            "id": "ff7ea62dec6a13ea",
-            "type": "leaf",
-            "state": {
-              "type": "empty",
-              "state": {},
-              "icon": "lucide-file",
-              "title": "Новая вкладка"
+              "title": "Прогресс проекта"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -159,7 +148,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "01 Dashboard/Персонаж.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -169,7 +157,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Обратные ссылки для Персонаж"
+              "title": "Обратные ссылки"
             }
           },
           {
@@ -178,12 +166,11 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "01 Dashboard/Персонаж.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Исходящие ссылки из Персонаж"
+              "title": "Исходящие ссылки"
             }
           },
           {
@@ -221,13 +208,12 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "01 Dashboard/Персонаж.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Структура Персонаж"
+              "title": "Структура"
             }
           },
           {
@@ -271,7 +257,7 @@
             }
           }
         ],
-        "currentTab": 6
+        "currentTab": 8
       }
     ],
     "direction": "horizontal",
@@ -296,15 +282,24 @@
       "periodic-notes:Open today": false
     }
   },
-  "active": "639a5a5b07aa4ec2",
+  "active": "9201b4f177e38303",
   "lastOpenFiles": [
-    "10 Projects/Учёт ВВТ/Модули/ThisWorkbook.md",
-    "01 Dashboard/Персонаж.md",
+    "10 Projects/Учёт ВВТ/Прогресс проекта.md",
+    "10 Projects/Учёт ВВТ/Модули/ModTransfers.md",
+    "10 Projects/Учёт ВВТ/Модули/ModProducts.md",
+    "10 Projects/Учёт ВВТ/Модули/ModDictionaries.md",
+    "10 Projects/Учёт ВВТ/Классы/CMenuButtonHandler.md",
+    "10 Projects/Учёт ВВТ/Схема проекта.md",
+    "10 Projects/Учёт ВВТ/Модули/ModSettings.md",
+    "10 Projects/Учёт ВВТ/Модули/ModMenuDynamic.md",
     "10 Projects/Учёт ВВТ/Учёт ВВТ.md",
+    "10 Projects/Учёт ВВТ/Модули/ModMenuAction.md",
+    "10 Projects/Учёт ВВТ/Модули/ThisWorkbook.md",
+    "10 Projects/Учёт ВВТ/Модули/ModFiles.md",
+    "01 Dashboard/Персонаж.md",
     "10 Projects/Учёт ВВТ/Модули/Mod_F_Change.md",
     "10 Projects/Учёт ВВТ/Модули/Main.md",
     "50 Daily Notes/2026-05-03.md",
-    "10 Projects/Учёт ВВТ/Прогресс проекта.md",
     "10 Projects/Учёт ВВТ/Модули/ModTools.md",
     "10 Projects/Учёт ВВТ/Модули/ModSession.md",
     "10 Projects/Учёт ВВТ/Модули/ModServiceUsersBuffer.md",
@@ -315,15 +310,6 @@
     "10 Projects/Учёт ВВТ/Модули/ModNomenclatures.md",
     "30 Resources/VBA/Role sub or function.md",
     "01 Dashboard/Памятка.md",
-    "10 Projects/Учёт ВВТ/Модули/ModFillsLB.md",
-    "10 Projects/Учёт ВВТ/Модули/ModMenu.md",
-    "10 Projects/Учёт ВВТ/Модули/ModCreateDB.md",
-    "10 Projects/Учёт ВВТ/Модули/ModAudit.md",
-    "90 Templates/VBA/Проект (квест) VBA.md",
-    "90 Templates/VBA/Форма.md",
-    "90 Templates/VBA/Класс.md",
-    "90 Templates/VBA/Модуль.md",
-    "10 Projects/Учёт ВВТ/Модули/ModUsers.md",
     "textgenerator/templates/trash/awesomePrompts",
     "textgenerator/templates/trash",
     "textgenerator/templates/tts",
