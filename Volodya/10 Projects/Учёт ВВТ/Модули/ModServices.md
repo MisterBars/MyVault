@@ -388,6 +388,9 @@ Private Sub ValidateServiceInput(ByVal serviceName As String, ByVal serviceCode 
 End Sub
 
 Private Sub ValidateUserServiceInput(ByVal userID As Long, ByVal serviceID As Long)
+' @desc: Проверяет правильность ввода связей службы
+' @role: Validate
+' @todo: --
     If userID <= 0 Then
         ShowWarning "UserID должен быть > 0."
     End If
@@ -396,11 +399,10 @@ Private Sub ValidateUserServiceInput(ByVal userID As Long, ByVal serviceID As Lo
     End If
 End Sub
 
-'=========================
-'Services
-'=========================
-
 Public Function GetServiceById(ByVal serviceID As Long) As ServiceInfo
+' @desc: Получение инфы о службе оп ID
+' @role: Query.Read
+' @todo: --
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     Dim info As ServiceInfo
@@ -428,6 +430,9 @@ Public Function GetServiceById(ByVal serviceID As Long) As ServiceInfo
 End Function
 
 Public Function GetServiceIdByName(ByVal serviceName As String) As Long
+' @desc: Получение инфы о службе оп имени
+' @role: Query.Read
+' @todo: --
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     
@@ -448,6 +453,9 @@ Public Function GetServiceIdByName(ByVal serviceName As String) As Long
 End Function
 
 Public Function GetServiceIdByCode(ByVal serviceCode As String) As Long
+' @desc: Получение инфы о службе оп коду
+' @role: Query.Read
+' @todo: --
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     
@@ -468,6 +476,9 @@ Public Function GetServiceIdByCode(ByVal serviceCode As String) As Long
 End Function
 
 Public Function ServiceNameExists(ByVal serviceName As String, Optional ByVal excludeID As Long = 0, Optional db As DAO.Database = Nothing) As Boolean
+' @desc: Проверка существовани службы по имени
+' @role: Query.Read
+' @todo: --
     Dim ownDb As Boolean
     Dim rs As DAO.Recordset
     Dim sql As String
@@ -495,6 +506,9 @@ Public Function ServiceNameExists(ByVal serviceName As String, Optional ByVal ex
 End Function
 
 Public Function ServiceCodeExists(ByVal serviceCode As String, Optional ByVal excludeID As Long = 0, Optional db As DAO.Database = Nothing) As Boolean
+' @desc: Проверка существовани службы по коду
+' @role: Query.Read
+' @todo: --
     Dim ownDb As Boolean
     Dim rs As DAO.Recordset
     Dim sql As String
@@ -527,6 +541,9 @@ Public Function CreateService( _
     ByVal description As String, _
     ByVal isActive As Boolean, _
     ByVal changeByUserId As Long) As Long
+' @desc: Безопасное создание службы
+' @role: Query.Write
+' @todo: --
 
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
@@ -604,6 +621,9 @@ Public Sub UpdateService( _
     ByVal newDescription As String, _
     ByVal newIsActive As Boolean, _
     ByVal changeByUserId As Long)
+' @desc: Безопасное обновление службы
+' @role: Query.Update
+' @todo: --
 
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
@@ -699,7 +719,11 @@ EH:
     ShowError "UpdateService", Err.Number, Err.description
     Resume CleanExit
 End Sub
+
 Public Sub DeleteServiceSafe(ByVal serviceID As Long, ByVal changedByUserId As Long)
+' @desc: Безопасное удаление службы
+' @role: Query.Write
+' @todo: --
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
@@ -762,6 +786,9 @@ EH:
 End Sub
 
 Public Function GetAllServices(Optional ByVal onlyActive As Boolean = False) As DAO.Recordset
+' @desc: Получение списка всех служб
+' @role: Query.Read
+' @todo: --
     Dim db As DAO.Database
     Dim sql As String
 
@@ -776,11 +803,10 @@ Public Function GetAllServices(Optional ByVal onlyActive As Boolean = False) As 
     Set GetAllServices = db.OpenRecordset(sql, dbOpenSnapshot)
 End Function
 
-' =========================
-' UserServices
-' =========================
-
 Public Function GetUserServiceById(ByVal userServiceID As Long) As UserServiceInfo
+' @desc: Получение связи пользователя со службой по ID
+' @role: Query.Read
+' @todo: --
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     Dim info As UserServiceInfo
@@ -808,6 +834,9 @@ Public Function GetUserServiceById(ByVal userServiceID As Long) As UserServiceIn
 End Function
 
 Public Function UserServiceExists(ByVal userID As Long, ByVal serviceID As Long, Optional ByVal excludeUserServiceID As Long = 0, Optional ByVal db As DAO.Database = Nothing) As Boolean
+' @desc: Проверка существования связи пользователя со службой 
+' @role: Query.Read
+' @todo: --
     Dim ownDb As Boolean
     Dim rs As DAO.Recordset
     Dim sql As String
@@ -837,6 +866,9 @@ Public Function AssignUserService(ByVal userID As Long, ByVal serviceID As Long,
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     Dim newID As Long
+' @desc: Безопасное создание связи пользователя со службой 
+' @role: Query.Write
+' @todo: --
 
     ValidateUserServiceInput userID, serviceID
 
@@ -894,6 +926,9 @@ EH:
 End Function
 
 Public Sub UpdateUserService(ByVal userServiceID As Long, ByVal newCanEdit As Boolean, ByVal newCanApprove As Boolean, ByVal changedByUserId As Long)
+' @desc: Безопасное обновление связи пользователя со службой 
+' @role: Query.Update
+' @todo: --
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
@@ -952,6 +987,9 @@ EH:
 End Sub
 
 Public Sub RevokeUserService(ByVal userServiceID As Long, ByVal changedByUserId As Long)
+' @desc: Безопасное удаление связи пользователя со службой 
+' @role: Query.Write
+' @todo: --
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
     Dim info As UserServiceInfo
@@ -1007,6 +1045,9 @@ Public Function GetUserServices(ByVal userID As Long) As DAO.Recordset
 End Function
 
 Public Function GetServiceUsers(ByVal serviceID As Long) As DAO.Recordset
+' @desc: Получение списка связеq службы с пользователями 
+' @role: Query.Read
+' @todo: --
     Dim db As DAO.Database
     Dim sql As String
 
@@ -1023,6 +1064,9 @@ Public Function GetServiceUsers(ByVal serviceID As Long) As DAO.Recordset
 End Function
 
 Public Function GetAllUserServices() As DAO.Recordset
+' @desc: Получение списка всех связей служб с пользователями 
+' @role: Query.Read
+' @todo: --
     Dim db As DAO.Database
     Dim sql As String
 
@@ -1038,6 +1082,9 @@ Public Function GetAllUserServices() As DAO.Recordset
 End Function
 
 Public Function CanUserEditServiceData(ByVal userID As Long, ByVal serviceID As Long) As Boolean
+' @desc: Проверка может ли пользователь менять связи пользователей со службами 
+' @role: Security
+' @todo: --
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     Dim sql As String
@@ -1068,6 +1115,9 @@ Public Function CanUserEditServiceData(ByVal userID As Long, ByVal serviceID As 
 End Function
 
 Public Function CanUserApproveServiceData(ByVal userID As Long, ByVal serviceID As Long) As Boolean
+' @desc: Проверка может ли пользователь менять связи пользователей со службами 
+' @role: Security
+' @todo: --
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     Dim sql As String
@@ -1101,6 +1151,9 @@ Public Sub UpdateUserServiceRights( _
     ByVal userServiceID As Long, _
     ByVal canEdit As Boolean, _
     ByVal canApprove As Boolean)
+' @desc: Обновление всех связей службы с пользователями
+' @role: Query.Update
+' @todo: --
 
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
@@ -1159,6 +1212,9 @@ EH:
 End Sub
 
 Public Sub SaveServiceUsersLinks(ByVal serviceID As Long, ByVal changedByUserId As Long)
+' @desc: Сохранение всех связей службы с пользователями
+' @role: Query.Write
+' @todo: --
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
     Dim items As Collection
