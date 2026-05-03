@@ -224,6 +224,7 @@ if (rows.length === 0) {
   dv.table(["Имя", "Тип", "Область", "Описание"], rows);
 }
 ```
+
 # Код
 ```vba
 Option Explicit
