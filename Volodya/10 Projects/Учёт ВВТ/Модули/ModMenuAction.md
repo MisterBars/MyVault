@@ -11,13 +11,10 @@ reward_xp: 50
 ---
 # Модуль
 ## Назначение
-- Кратко, за что отвечает модуль, какие задачи решает.
+- Действия элементов CommandBars меню из [[ModMenu]]
 ## Важные решения
-- Почему выбрана такая архитектура.
-- Комментарии по производительности/ограничениям.
 
 ## Задачи по модулю
-
 ```dataview
 TABLE status as "Статус", task_type as "Тип", deadline as "Срок"
 FROM ""
@@ -26,7 +23,6 @@ SORT deadline ASC
 ```
 
 ## Взаимосвязи (исходящие вызовы)
-
 ```dataviewjs
 const TYPES = ['module', 'form', 'class'];
 
@@ -295,6 +291,9 @@ Option Explicit
 ' Обработчики команд
 
 Sub ToggleCheckbox()
+' @desc: Оставлена как пример переключателя константы из меню
+' @role: UI
+' @todo: --
     With CommandBars.ActionControl
         If .state = msoButtonDown Then
             .Caption = "Окно при запуске(Выкл.)"
@@ -309,10 +308,16 @@ Sub ToggleCheckbox()
 End Sub
 
 Sub ChangeDB()
+' @desc: Запуск формы выбора БД
+' @role: UI
+' @todo: --
     F_ChangeDB.Show
 End Sub
 
 Sub Auth()
+' @desc: Запуск основных форм авторизации или дальнейшего меню
+' @role: UI
+' @todo: --
     If g_IsAuthorized Then
         ID_table_menu = 0
         F_Menu.Show
@@ -320,7 +325,6 @@ Sub Auth()
         F_Auth.Show
     End If
 End Sub
-
 ```
 
 ## Черновые заметки

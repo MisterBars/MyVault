@@ -290,6 +290,13 @@ if (rows.length === 0) {
 
 Option Explicit
 
+Private Sub ShowWarning(ByVal MsgText As String, Optional ByVal Title As String = "Предупреждение")
+' @desc: Формализованное сообщение об ошибке
+' @role: Init
+' @todo: Общую не видит VBE
+    MsgBox MsgText, vbExclamation, Title
+End Sub
+
 Public Sub CreateVVTDatabase()
 ' @desc: Точка входа — вызывать из Excel
 ' @role: Init

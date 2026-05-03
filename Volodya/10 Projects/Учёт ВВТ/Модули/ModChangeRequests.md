@@ -16,7 +16,6 @@ reward_xp: 50
 
 
 ## Задачи по модулю
-
 ```dataview
 TABLE status as "Статус", task_type as "Тип", deadline as "Срок"
 FROM ""
@@ -25,7 +24,6 @@ SORT deadline ASC
 ```
 
 ## Взаимосвязи (исходящие вызовы)
-
 ```dataviewjs
 const TYPES = ['module', 'form', 'class'];
 

@@ -11,10 +11,8 @@ reward_xp: 50
 ---
 # Модуль
 ## Назначение
-- Кратко, за что отвечает модуль, какие задачи решает.
+- Автозапуск надстройки и её меню
 ## Важные решения
-- Почему выбрана такая архитектура.
-- Комментарии по производительности/ограничениям.
 
 ## Задачи по модулю
 
@@ -77,7 +75,6 @@ async function getVbaBlocks(path) {
 }
 
 const reProcDecl = /^\s*(?:(Public|Private)\s+)?(?:Static\s+)?(Sub|Function)\s+([A-Za-z0-9_]+)/i;
-
 const procIndex = {};
 
 for (const page of allPages) {
@@ -108,8 +105,11 @@ const debugProcCount = debugProcNames.length;
 
 const currentBlocks = await getVbaBlocks(current.file.path);
 
-// Вызовы: Foo(...), Call Bar(...)
-const reCall = /\b(?:Call\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*(?=\()/g;
+// будем искать вызовы более аккуратно:
+// 1) Call Name ...
+// 2) Name(...)
+// 3) Name <что-то>, но не Name =, не Dim Name, не Set Name =
+const reCallPattern = /\b(?:Call\s+)?([A-Za-z_][A-Za-z0-9_]*)\b/g;
 
 const callMap = new Map();
 
@@ -120,7 +120,6 @@ for (const block of currentBlocks) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const trimmed = line.trim();
-
     if (trimmed.startsWith("'")) continue;
 
     const declMatch = line.match(reProcDecl);
@@ -131,13 +130,58 @@ for (const block of currentBlocks) {
 
     if (!currentProc) continue;
 
+    // Не считать строки, где имя функции слева от "=":
+    //   FuncName = ...
+    //   Set obj = ...
+    //   Dim FuncName As ...
+    // Обработаем это внутри цикла по совпадениям.
+
     let m;
-    while ((m = reCall.exec(line)) !== null) {
+    while ((m = reCallPattern.exec(line)) !== null) {
       const calledName = m[1];
+
+      // Позиция найденного имени в строке
+      const idx = m.index;
+
+      // Левая часть строки до имени
+      const before = line.slice(0, idx);
+      const after = line.slice(idx + calledName.length);
+
+      const beforeTrim = before.trim();
+      const afterTrim = after.trimStart();
+
+      // 1) Если это присваивание результата функции: "FuncName = ..."
+      //    — имя стоит в начале строки / после пробелов, а сразу после него "="
+      const isAssignmentResult =
+        beforeTrim === "" && afterTrim.startsWith("=");
+
+      if (isAssignmentResult) {
+        // Это возврат из функции, НЕ вызов
+        continue;
+      }
+
+      // 2) Если это объявление переменной: "Dim FuncName As ..."
+      if (/^\s*Dim\s+$/i.test(before) || /^\s*Dim\s+/i.test(beforeTrim)) {
+        continue;
+      }
+
+      // 3) Если это левая часть Set: "Set obj = ..."
+      //    — нас интересуют вызовы, а не имя слева от Set/=
+      if (/^\s*Set\s+$/i.test(before) || /^\s*Set\s+/i.test(beforeTrim)) {
+        continue;
+      }
+
+      // 4) Если после имени нет "(", нет пробела + аргументов, и нет "Call",
+      //    можно попасть в кучу ложных срабатываний. Но:
+      //    - уже отсекли очевидные присваивания и Dim/Set.
+      //    - оставим это как потенциальный вызов (вызов без скобок: Name arg1, arg2).
+      //    При желании можно ещё проверить, что после имени не конец строки и не оператор.
+
       const targets = procIndex[calledName];
       if (!targets) continue;
 
       for (const t of targets) {
+        // не считаем самовызов внутри того же модуля той же процедуры
         if (t.modulePath === current.file.path && calledName === currentProc) continue;
 
         const key = `${currentProc}||${t.modulePath}`;
@@ -156,7 +200,6 @@ for (const block of currentBlocks) {
 }
 
 const rows = [];
-
 for (const entry of callMap.values()) {
   const calledList = Array.from(entry.calledNames).sort().join(", ");
   rows.push([
@@ -292,15 +335,16 @@ if (rows.length === 0) {
 
 Option Explicit
 
-' Автозапуск для надстройки
 Public Sub Auto_Open()
+' @desc: Автозапуск для надстройки
+' @role: Init
+' @todo: --
     On Error Resume Next
     Call OpenAnotherExcelFile(ADDIN_PATH & "Encrypt_VVT.xlam", "Encrypt_VVT.xlam")
     ConfigureReferencesForAddIn ThisWorkbook.VBProject, Val(Application.version)
     CreateVVTMenu
     On Error GoTo 0
 End Sub
-
 ```
 
 ## Черновые заметки

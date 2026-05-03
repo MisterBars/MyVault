@@ -11,13 +11,11 @@ reward_xp: 50
 ---
 # Модуль
 ## Назначение
-- Кратко, за что отвечает модуль, какие задачи решает.
+- Создание динамического меню
 ## Важные решения
-- Почему выбрана такая архитектура.
-- Комментарии по производительности/ограничениям.
+- Использует класс [[CMenuButtonHandler]]
 
 ## Задачи по модулю
-
 ```dataview
 TABLE status as "Статус", task_type as "Тип", deadline as "Срок"
 FROM ""
@@ -26,7 +24,6 @@ SORT deadline ASC
 ```
 
 ## Взаимосвязи (исходящие вызовы)
-
 ```dataviewjs
 const TYPES = ['module', 'form', 'class'];
 
@@ -296,6 +293,9 @@ Option Explicit
 
 
 Public Function GetCurrentRoleInfo() As RoleInfo
+' @desc: Получение инфы роли активного пользователя
+' @role: Query.Read
+' @todo: --
     If g_CurrentRoleID > 0 Then
         GetCurrentRoleInfo = GetRoleById(g_CurrentRoleID)
     ElseIf g_CurrentUserID > 0 Then
@@ -304,6 +304,9 @@ Public Function GetCurrentRoleInfo() As RoleInfo
 End Function
 
 Public Function HasMenuPermission(rInfo As RoleInfo, ByVal permissionKey As String) As Boolean
+' @desc: Проверка доступности кнопок меню
+' @role: Security
+' @todo: Переделать логику доступности
     Select Case LCase$(Trim$(permissionKey))
         Case "", "authorized":
             HasMenuPermission = True
@@ -319,6 +322,9 @@ Public Function HasMenuPermission(rInfo As RoleInfo, ByVal permissionKey As Stri
 End Function
 
 Public Function GetMenuItems() As Variant
+' @desc: Создает массив всех кнопок
+' @role: UI
+' @todo: --
     GetMenuItems = Array( _
         Array("Роли", "roles", "CanManageAdmin", 10), _
         Array("Пользователи", "users", "CanManageUsers", 20), _
@@ -330,13 +336,15 @@ Public Function GetMenuItems() As Variant
 End Function
 
 Public Function GetMenuCaptionByRole(rInfo As RoleInfo) As String
+' @desc: Устанавливает Caption формы меню
+' @role: UI
+' @todo: --
     If rInfo.roleID <= 0 Then
         GetMenuCaptionByRole = "Главное меню"
     Else
         GetMenuCaptionByRole = "Меню пользователя - " & g_CurrentLogin
     End If
 End Function
-
 ```
 
 ## Черновые заметки

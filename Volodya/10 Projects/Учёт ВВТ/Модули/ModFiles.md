@@ -11,10 +11,8 @@ reward_xp: 50
 ---
 # Модуль
 ## Назначение
-- Кратко, за что отвечает модуль, какие задачи решает.
+- Отвечает за работу с файлами
 ## Важные решения
-- Почему выбрана такая архитектура.
-- Комментарии по производительности/ограничениям.
 
 ## Задачи по модулю
 
@@ -26,7 +24,6 @@ SORT deadline ASC
 ```
 
 ## Взаимосвязи (исходящие вызовы)
-
 ```dataviewjs
 const TYPES = ['module', 'form', 'class'];
 
@@ -77,7 +74,6 @@ async function getVbaBlocks(path) {
 }
 
 const reProcDecl = /^\s*(?:(Public|Private)\s+)?(?:Static\s+)?(Sub|Function)\s+([A-Za-z0-9_]+)/i;
-
 const procIndex = {};
 
 for (const page of allPages) {
@@ -108,8 +104,8 @@ const debugProcCount = debugProcNames.length;
 
 const currentBlocks = await getVbaBlocks(current.file.path);
 
-// Вызовы: Foo(...), Call Bar(...)
-const reCall = /\b(?:Call\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*(?=\()/g;
+// Вызовы: Foo(...), Foo arg1, Call Bar(...), Call Bar arg
+const reCall = /\b(?:Call\s+)?([A-Za-z_][A-Za-z0-9_]*)\b/g;
 
 const callMap = new Map();
 
@@ -120,7 +116,6 @@ for (const block of currentBlocks) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const trimmed = line.trim();
-
     if (trimmed.startsWith("'")) continue;
 
     const declMatch = line.match(reProcDecl);
@@ -138,6 +133,7 @@ for (const block of currentBlocks) {
       if (!targets) continue;
 
       for (const t of targets) {
+        // не считаем самовызов внутри того же модуля той же процедуры
         if (t.modulePath === current.file.path && calledName === currentProc) continue;
 
         const key = `${currentProc}||${t.modulePath}`;
@@ -156,7 +152,6 @@ for (const block of currentBlocks) {
 }
 
 const rows = [];
-
 for (const entry of callMap.values()) {
   const calledList = Array.from(entry.calledNames).sort().join(", ");
   rows.push([
@@ -321,7 +316,17 @@ Option Explicit
 Private Const SYNCHRONIZE As Long = &H100000
 Private Const INFINITE As Long = &HFFFFFFFF
 
+Private Sub ShowWarning(ByVal MsgText As String, Optional ByVal Title As String = "Предупреждение")
+' @desc: Формализованное сообщение об ошибке
+' @role: Init
+' @todo: Общую не видит VBE
+    MsgBox MsgText, vbExclamation, Title
+End Sub
+
 Private Function ShellAndWait(ByVal CmdLine As String) As Long
+' @desc: вызов Shell команд с ожиданием
+' @role: Service
+' @todo: --
     Dim pid As Long
     Dim hProc As LongPtr
     Dim res As Long
@@ -338,8 +343,10 @@ Private Function ShellAndWait(ByVal CmdLine As String) As Long
     ShellAndWait = res
 End Function
 
-' Открытие другого excel файла
 Public Sub OpenAnotherExcelFile(filePath As String, fileName As String)
+' @desc: открытие другого Excel файла
+' @role: Service
+' @todo: --
     On Error GoTo ErrorHandler
     Dim AnotherWorkbook As Workbook
     Dim wb As Workbook
@@ -364,8 +371,10 @@ ErrorHandler:
     ShowError "OpenAnotherExcelFile", Err.Number, Err.description
 End Sub
 
-' Создание дерева папок
 Public Sub EnsureFolderTreeExists(ByVal DocPath As String, ByVal Path As String)
+' @desc: Создание дерева папок
+' @role: Service
+' @todo: --
     Dim fso As Object
     Dim parts() As String
     Dim curPath As String
@@ -384,9 +393,10 @@ Public Sub EnsureFolderTreeExists(ByVal DocPath As String, ByVal Path As String)
     Next i
 End Sub
 
-
-' Получаем путь к 7Zip
 Public Function Get7ZipPath() As String
+' @desc: Получаем путь к 7Zip
+' @role: Service
+' @todo: --
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
@@ -408,6 +418,9 @@ End Function
 
 ' Выбор сканов
 Function SelectScanFiles() As Collection
+' @desc: Выбор сканов/изображений
+' @role: Service
+' @todo: --
     Dim fd As FileDialog
     Dim i As Long
     Dim col As New Collection
@@ -431,8 +444,10 @@ Function SelectScanFiles() As Collection
     Set SelectScanFiles = col
 End Function
 
-' Архивирование коллекции файлов
 Public Sub ZipFilesWith7Zip(ByVal ZipPath As String, ByVal Files As Collection)
+' @desc: Архивирование коллекции файлов
+' @role: Service
+' @todo: --
     Dim sevenZip As String
     Dim fso As Object
     Dim i As Long
@@ -475,6 +490,9 @@ End Sub
 Public Function ArchiveScansWith7Zip( _
     ByVal ProductFolderName As String, _
     ByVal ArchiveName As String) As String
+' @desc: Итоговая процедура архивирования сканов/изображений
+' @role: Service
+' @todo: --
 
     Dim DOC_ROOT As String
     
@@ -524,6 +542,9 @@ Public Function ArchiveScansWith7Zip( _
 End Function
 
 Sub TestArchive()
+' @desc: Тестовая процедура архивирования сканов/изображений
+' @role: Service
+' @todo: --
     ArchiveScansWith7Zip "INV_12345", "Паспорт_2026-04-12"
 End Sub
 ```

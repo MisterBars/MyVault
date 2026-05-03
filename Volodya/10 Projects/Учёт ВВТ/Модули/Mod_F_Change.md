@@ -11,13 +11,11 @@ reward_xp: 50
 ---
 # Модуль
 ## Назначение
-- Кратко, за что отвечает модуль, какие задачи решает.
+- Вывод процедур создания/изменения записей в форме [[F_Change]]
 ## Важные решения
-- Почему выбрана такая архитектура.
-- Комментарии по производительности/ограничениям.
+- Чтобы не нагружать кодом саму форму
 
 ## Задачи по модулю
-
 ```dataview
 TABLE status as "Статус", task_type as "Тип", deadline as "Срок"
 FROM ""
@@ -26,7 +24,6 @@ SORT deadline ASC
 ```
 
 ## Взаимосвязи (исходящие вызовы)
-
 ```dataviewjs
 const TYPES = ['module', 'form', 'class'];
 
@@ -77,7 +74,6 @@ async function getVbaBlocks(path) {
 }
 
 const reProcDecl = /^\s*(?:(Public|Private)\s+)?(?:Static\s+)?(Sub|Function)\s+([A-Za-z0-9_]+)/i;
-
 const procIndex = {};
 
 for (const page of allPages) {
@@ -108,8 +104,8 @@ const debugProcCount = debugProcNames.length;
 
 const currentBlocks = await getVbaBlocks(current.file.path);
 
-// Вызовы: Foo(...), Call Bar(...)
-const reCall = /\b(?:Call\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*(?=\()/g;
+// Вызовы: Foo(...), Foo arg1, Call Bar(...), Call Bar arg
+const reCall = /\b(?:Call\s+)?([A-Za-z_][A-Za-z0-9_]*)\b/g;
 
 const callMap = new Map();
 
@@ -120,7 +116,6 @@ for (const block of currentBlocks) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const trimmed = line.trim();
-
     if (trimmed.startsWith("'")) continue;
 
     const declMatch = line.match(reProcDecl);
@@ -138,6 +133,7 @@ for (const block of currentBlocks) {
       if (!targets) continue;
 
       for (const t of targets) {
+        // не считаем самовызов внутри того же модуля той же процедуры
         if (t.modulePath === current.file.path && calledName === currentProc) continue;
 
         const key = `${currentProc}||${t.modulePath}`;
@@ -156,7 +152,6 @@ for (const block of currentBlocks) {
 }
 
 const rows = [];
-
 for (const entry of callMap.values()) {
   const calledList = Array.from(entry.calledNames).sort().join(", ");
   rows.push([
@@ -293,6 +288,9 @@ if (rows.length === 0) {
 Option Explicit
 
 Public Sub SaveRoles(ByVal frm As F_Change)
+' @desc: Создание/обновление роли
+' @role: Query
+' @todo: --
     Dim roleID As Long
 
     If frm.TB_RoleName.Value = Empty Then
@@ -349,6 +347,9 @@ EH:
 End Sub
 
 Public Sub SaveUsers(ByVal frm As F_Change)
+' @desc: Создание/обновление пользователя
+' @role: Query
+' @todo: --
     Dim userID As Long
     
     If frm.TB_UserLogin.Value = Empty Or frm.TB_UserFullName.Value = Empty Or frm.ComB_UserRole.Value = Empty Then
@@ -405,6 +406,9 @@ EH:
 End Sub
 
 Public Sub SaveNomTypes(ByVal frm As F_Change)
+' @desc: Создание/обновление типа номенклатуры
+' @role: Query
+' @todo: --
     Dim NomTypeID As Long
 
     If frm.TB_NomTypesName.Value = Empty Or frm.TB_NomTypesKod.Value = Empty Then
@@ -453,6 +457,9 @@ EH:
 End Sub
 
 Public Sub SaveNoms(ByVal frm As F_Change)
+' @desc: Создание/обновление номенклатуры
+' @role: Query
+' @todo: --
     Dim NomID As Long
             
     If frm.ComB_NomType.Value = Empty Or frm.TB_NomKod.Value = Empty Or frm.TB_NomName.Value = Empty Then
@@ -501,6 +508,9 @@ EH:
 End Sub
 
 Public Sub SaveServiceAndUsers(ByVal frm As F_Change)
+' @desc: Создание/обновление службы и связи пользователей с ней
+' @role: Query
+' @todo: --
     Dim serviceID As Long
 
     If frm.TB_ServicesName.Value = Empty Or frm.TB_ServicesCode.Value = Empty Then
