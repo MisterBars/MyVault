@@ -279,24 +279,27 @@ if (rows.length === 0) {
 
 
 ' ============================================================
-' Ìîäóëü: modCreateDB  (v2 — èñïðàâëåíà îøèáêà "too many line continuations")
-' Çàïóñêàòü èç Excel VBA
-' Åäèíñòâåííîå òðåáîâàíèå: Microsoft ACE OLE DB Provider
-'   (âõîäèò â ñîñòàâ Access 2007+ èëè ñòàâèòñÿ ÷åðåç
-'    áåñïëàòíûé "Microsoft Access Database Engine 2010 Redistributable")
+' Модуль: modCreateDB  (v2 — исправлена ошибка "too many line continuations")
+' Запускать из Excel VBA
+' Единственное требование: Microsoft ACE OLE DB Provider
+'   (входит в состав Access 2007+ или ставится через
+'    бесплатный "Microsoft Access Database Engine 2010 Redistributable")
 ' ============================================================
 Option Explicit
 
 ' ----------------------------------------------------------------
-' Òî÷êà âõîäà — âûçûâàòü èç Excel
+' Точка входа — вызывать из Excel
 ' ----------------------------------------------------------------
 Public Sub CreateVVTDatabase()
-    ' *** Óêàæè ïóòü ê ÁÄ â ñåòåâîé ïàïêå ***
+' @desc: Создает чистую БД проекта
+' @role: **какое место она занимает в системе**
+' @todo: **заметка по процедуре/функции**
+    ' *** Укажи путь к БД в сетевой папке ***
     Dim DB_PATH As String
     DB_PATH = ThisWorkbook.Path & "\vvt_db.accdb"
     If CreateAccessDB(DB_PATH) Then
         RunAllDDL DB_PATH
-        ShowInfo "ÁÄ ñîçäàíà óñïåøíî:" & vbCrLf & DB_PATH, vbInformation
+        ShowInfo "БД создана успешно:" & vbCrLf & DB_PATH, vbInformation
         InitDefaultRoles
         CreateDefaultAdmin
     End If
@@ -304,13 +307,13 @@ Public Sub CreateVVTDatabase()
 End Sub
 
 ' ----------------------------------------------------------------
-' Ñîçäà¸ò ïóñòîé .accdb ÷åðåç ADOX (late binding)
+' Создаёт пустой .accdb через ADOX (late binding)
 ' ----------------------------------------------------------------
 Private Function CreateAccessDB(sPath As String) As Boolean
     Dim oCat As Object
     On Error GoTo ErrHandler
     If Dir(sPath) <> "" Then
-        If ShowWarning("Ôàéë óæå ñóùåñòâóåò. Ïåðåçàïèñàòü?", vbYesNo) = vbNo Then Exit Function
+        If ShowWarning("Файл уже существует. Перезаписать?", vbYesNo) = vbNo Then Exit Function
         Kill sPath
     End If
     Set oCat = CreateObject("ADOX.Catalog")
@@ -319,11 +322,11 @@ Private Function CreateAccessDB(sPath As String) As Boolean
     CreateAccessDB = True
     Exit Function
 ErrHandler:
-    ShowError "Îøèáêà ñîçäàíèÿ ôàéëà ÁÄ.", Err.Number, Err.description
+    ShowError "Ошибка создания файла БД.", Err.Number, Err.description
 End Function
 
 ' ----------------------------------------------------------------
-' Îòêðûâàåò ñîåäèíåíèå è âûïîëíÿåò DDL ïî î÷åðåäè
+' Открывает соединение и выполняет DDL по очереди
 ' ----------------------------------------------------------------
 Private Sub RunAllDDL(sPath As String)
     Dim oCn  As Object
@@ -352,12 +355,12 @@ Private Sub RunAllDDL(sPath As String)
     Set oCn = Nothing
     Exit Sub
 ErrHandler:
-    ShowError "Îøèáêà íà øàãå " & i & ":" & vbCrLf & _
+    ShowError "Ошибка на шаге " & i & ":" & vbCrLf & _
            Left(aSQL(i), 300), Err.Number, Err.description
 End Sub
 
 ' ----------------------------------------------------------------
-' Âîçâðàùàåò ìàññèâ DDL-çàïðîñîâ â ïðàâèëüíîì ïîðÿäêå
+' Возвращает массив DDL-запросов в правильном порядке
 ' ----------------------------------------------------------------
 Private Function GetDDLStatements() As String()
     Dim s(200) As String
@@ -703,7 +706,7 @@ Private Function GetDDLStatements() As String()
            "CONSTRAINT FK_PD_User FOREIGN KEY (CreatedByUserID) REFERENCES Users (UserID))"
     n = n + 1
 
-    ' ===== ÈÍÄÅÊÑÛ =====
+    ' ===== ИНДЕКСЫ =====
     s(n) = "CREATE INDEX IDX_Nom_TypeID ON Nomenclatures (NomenclatureTypeID)": n = n + 1
     s(n) = "CREATE INDEX IDX_NomType_Code ON NomenclatureTypes (TypeCode)": n = n + 1
     s(n) = "CREATE INDEX IDX_Prod_Serial ON Products (SerialNumber)": n = n + 1

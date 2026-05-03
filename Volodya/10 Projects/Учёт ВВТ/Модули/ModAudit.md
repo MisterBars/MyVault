@@ -338,9 +338,9 @@ Public Sub WriteAuditEvent( _
 End Sub
 
 Private Function IsMissingOrNull(ByVal v As Variant) As Boolean
-' @desc: Запись логов изменений в БД
+' @desc: Проверка не пустое ли значение
 ' @role: Service
-' @todo: 
+' @todo: --
     If IsObject(v) Then
         IsMissingOrNull = (v Is Nothing)
     ElseIf IsNull(v) Then
