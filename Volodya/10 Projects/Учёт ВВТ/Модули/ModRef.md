@@ -279,418 +279,158 @@ if (rows.length === 0) {
 ' @todo: **заметка по процедуре/функции**
 
 
+' === МОДУЛЬ ПОДКЛЮЧЕНИЯ БИБЛИОТЕК МОЖНО ВЫЗЫВАТЬ ИЗ ДРУГИХ НАДСТРОЕК ===
 Option Explicit
 
-Public Type NomenclatureInfo
-    nomenclatureID As Long
-    nomenclatureTypeID As Long
-    NomenclatureTypeName As String
-    nomenclatureCode As String
-    nomenclatureName As String
-    description As String
-End Type
-
-Private Const TBL_NOMS As String = "Nomenclatures"
-Private Const TBL_NOM_TYPES As String = "NomenclatureTypes"
-Private Const TBL_PRODUCTS As String = "Products"
-
-Private Const FLD_ID As String = "NomenclatureID"
-Private Const FLD_TYPE_ID As String = "NomenclatureTypeID"
-Private Const FLD_CODE As String = "NomenclatureCode"
-Private Const FLD_NAME As String = "NomenclatureName"
-Private Const FLD_DESC As String = "Description"
-
-Private Sub ValidateNomenclatureInput(ByVal nomenclatureTypeID As Long, ByVal nomenclatureCode As String, ByVal nomenclatureName As String)
-    nomenclatureCode = Trim$(nomenclatureCode)
-    nomenclatureName = Trim$(nomenclatureName)
-    Dim message As String
-    message = Empty
-    If nomenclatureTypeID <= 0 Then
-        message = message + "Не выбран тип номенклатуры." + vbCrLf
-    End If
-
-    If LenB(nomenclatureCode) = 0 Then
-        message = message + "Не заполнен код номенклатуры." + vbCrLf
-    End If
-
-    If Len(nomenclatureCode) > 50 Then
-        message = message + "Код номенклатуры не должен быть длиннее 50 символов." + vbCrLf
-    End If
-
-    If Len(nomenclatureName) > 255 Then
-        message = message + "Наименование номенклатуры не должно быть длиннее 255 символов." + vbCrLf
-    End If
-    If message <> Empty Then ShowWarning message
+Public Sub ConfigureReferencesForAddIn(targetProject As Object, Optional version As Integer)
+    On Error Resume Next
+    Application.EnableEvents = False
+    
+    ' Удаляем недействительные зависимости
+    RemoveBrokenReferences targetProject
+    
+    ' Добавляем необходимые зависимости
+    AddRequiredReferences targetProject, version
+    
+    Application.EnableEvents = True
+    On Error GoTo 0
 End Sub
 
-Public Function GetNomenclatureById(ByVal nomenclatureID As Long) As NomenclatureInfo
-    Dim db As DAO.Database
-    Dim rs As DAO.Recordset
-    Dim info As NomenclatureInfo
 
-    If nomenclatureID <= 0 Then Exit Function
-
-    Set db = OpenCurrentDb()
-    Set rs = db.OpenRecordset( _
-        "SELECT N.NomenclatureID, N.NomenclatureTypeID, T.TypeName, N.NomenclatureCode, N.NomenclatureName, N.Description " & _
-        "FROM Nomenclatures AS N " & _
-        "INNER JOIN NomenclatureTypes AS T ON N.NomenclatureTypeID = T.NomenclatureTypeID " & _
-        "WHERE N.NomenclatureID = " & nomenclatureID, _
-        dbOpenSnapshot)
-
-    If Not rs.EOF Then
-        info.nomenclatureID = NzLng(rs.Fields("NomenclatureID").Value)
-        info.nomenclatureTypeID = NzLng(rs.Fields("NomenclatureTypeID").Value)
-        info.NomenclatureTypeName = NzStr(rs.Fields("TypeName").Value)
-        info.nomenclatureCode = NzStr(rs.Fields("NomenclatureCode").Value)
-        info.nomenclatureName = NzStr(rs.Fields("NomenclatureName").Value)
-        info.description = NzStr(rs.Fields("Description").Value)
-    End If
-
-    rs.Close
-    Set rs = Nothing
-    Set db = Nothing
-
-    GetNomenclatureById = info
-End Function
-
-Public Function GetNomenclatureIdByCode(ByVal nomenclatureCode As String) As Long
-    Dim db As DAO.Database
-    Dim rs As DAO.Recordset
-    
-    On Error GoTo EH
-    
-    If nomenclatureCode <= 0 Then Exit Function
-
-    Set db = OpenCurrentDb()
-    Set rs = db.OpenRecordset( _
-        "SELECT NomenclatureID " & _
-        "FROM Nomenclatures " & _
-        "WHERE NomenclatureCode = " & Q(nomenclatureCode), _
-        dbOpenSnapshot)
-
-    If Not rs.EOF Then
-        GetNomenclatureIdByCode = NzLng(rs.Fields(0).Value)
-    End If
-
-CleanExit:
-    On Error Resume Next
-    If Not rs Is Nothing Then rs.Close
-    Set rs = Nothing
-    Set db = Nothing
-    Exit Function
-EH:
-    On Error Resume Next
-    ShowError "GetNomenclatureIdByCode", Err.Number, Err.description
-    Resume CleanExit
-End Function
-
-Public Function NomenclatureExists( _
-    ByVal nomenclatureTypeID As Long, _
-    ByVal nomenclatureCode As String, _
-    Optional ByVal excludeID As Long = 0, _
-    Optional ByVal db As DAO.Database = Nothing) As Boolean
-
-    Dim ownDb As Boolean
-    Dim rs As DAO.Recordset
-    Dim sql As String
-
-    nomenclatureCode = Trim$(nomenclatureCode)
-    If nomenclatureTypeID <= 0 Or LenB(nomenclatureCode) = 0 Then Exit Function
-
-    If db Is Nothing Then
-        Set db = OpenCurrentDb()
-        ownDb = True
-    End If
-
-    sql = "SELECT NomenclatureID " & _
-          "FROM Nomenclatures " & _
-          "WHERE NomenclatureTypeID = " & nomenclatureTypeID & _
-          " AND NomenclatureCode = " & Q(nomenclatureCode)
-
-    If excludeID > 0 Then
-        sql = sql & " AND NomenclatureID <> " & excludeID
-    End If
-
-    Set rs = db.OpenRecordset(sql, dbOpenSnapshot)
-    NomenclatureExists = Not rs.EOF
-
-    rs.Close
-    Set rs = Nothing
-    If ownDb Then Set db = Nothing
-End Function
-
-Public Function CreateNomenclature( _
-    ByVal nomenclatureTypeID As Long, _
-    ByVal nomenclatureCode As String, _
-    ByVal nomenclatureName As String, _
-    ByVal description As String, _
-    ByVal changedByUserId As Long) As Long
-
-    Dim ws As DAO.Workspace
-    Dim db As DAO.Database
-    Dim rs As DAO.Recordset
-    Dim newID As Long
-
-    nomenclatureCode = Trim$(nomenclatureCode)
-    nomenclatureName = Trim$(nomenclatureName)
-    description = Trim$(description)
-
-    ValidateNomenclatureInput nomenclatureTypeID, nomenclatureCode, nomenclatureName
-
-    If GetNomenclatureTypeById(nomenclatureTypeID).nomenclatureTypeID = 0 Then
-        ShowWarning "Указанный тип номенклатуры не найден."
-        GoTo CleanExit
-    End If
-
-    Set ws = DBEngine.Workspaces(0)
-    Set db = OpenCurrentDb()
-
-    On Error GoTo EH
-    ws.BeginTrans
-
-    If NomenclatureExists(nomenclatureTypeID, nomenclatureCode, 0, db) Then
-        ShowWarning "Номенклатура с таким кодом уже существует для выбранного типа."
-        GoTo CleanExit
-    End If
-
-    Set rs = db.OpenRecordset(TBL_NOMS, dbOpenDynaset, dbAppendOnly)
-
-    rs.AddNew
-    rs.Fields(FLD_TYPE_ID).Value = nomenclatureTypeID
-    rs.Fields(FLD_CODE).Value = nomenclatureCode
-
-    If LenB(nomenclatureName) > 0 Then
-        rs.Fields(FLD_NAME).Value = Left$(nomenclatureName, 255)
-    Else
-        rs.Fields(FLD_NAME).Value = Null
-    End If
-
-    If LenB(description) > 0 Then
-        rs.Fields(FLD_DESC).Value = description
-    Else
-        rs.Fields(FLD_DESC).Value = Null
-    End If
-
-    rs.Update
-    rs.Bookmark = rs.LastModified
-    newID = NzLng(rs.Fields(FLD_ID).Value)
-
-    rs.Close
-    Set rs = Nothing
-
-    WriteAuditEvent db, TBL_NOMS, newID, FLD_TYPE_ID, vbNullString, CStr(nomenclatureTypeID), "INSERT", "NomenclatureCreate", changedByUserId, Null
-    WriteAuditEvent db, TBL_NOMS, newID, FLD_CODE, vbNullString, nomenclatureCode, "INSERT", "NomenclatureCreate", changedByUserId, Null
-    WriteAuditEvent db, TBL_NOMS, newID, FLD_NAME, vbNullString, nomenclatureName, "INSERT", "NomenclatureCreate", changedByUserId, Null
-    WriteAuditEvent db, TBL_NOMS, newID, FLD_DESC, vbNullString, description, "INSERT", "NomenclatureCreate", changedByUserId, Null
-
-    ws.CommitTrans
-    CreateNomenclature = newID
-
-CleanExit:
-    On Error Resume Next
-    If Not rs Is Nothing Then rs.Close
-    Set rs = Nothing
-    Set db = Nothing
-    Set ws = Nothing
-    Exit Function
-
-EH:
-    On Error Resume Next
-    ws.Rollback
-    ShowError "CreateNomenclature", Err.Number, , Err.description
-    Resume CleanExit
-End Function
-
-Public Sub UpdateNomenclature( _
-    ByVal nomenclatureID As Long, _
-    ByVal newNomenclatureTypeID As Long, _
-    ByVal newNomenclatureCode As String, _
-    ByVal newNomenclatureName As String, _
-    ByVal newDescription As String, _
-    ByVal changedByUserId As Long)
-
-    Dim ws As DAO.Workspace
-    Dim db As DAO.Database
-    Dim rs As DAO.Recordset
-    Dim oldInfo As NomenclatureInfo
-
-    If nomenclatureID <= 0 Then
-        ShowWarning "Некорректный NomenclatureID."
-        GoTo CleanExit
-    End If
-
-    newNomenclatureCode = Trim$(newNomenclatureCode)
-    newNomenclatureName = Trim$(newNomenclatureName)
-    newDescription = Trim$(newDescription)
-
-    ValidateNomenclatureInput newNomenclatureTypeID, newNomenclatureCode, newNomenclatureName
-
-    oldInfo = GetNomenclatureById(nomenclatureID)
-    If oldInfo.nomenclatureID = 0 Then
-        ShowWarning "Номенклатура не найдена."
-        GoTo CleanExit
-    End If
-
-    If GetNomenclatureTypeById(newNomenclatureTypeID).nomenclatureTypeID = 0 Then
-        ShowWarning "Указанный тип номенклатуры не найден."
-        GoTo CleanExit
-    End If
-
-    Set ws = DBEngine.Workspaces(0)
-    Set db = OpenCurrentDb()
-
-    On Error GoTo EH
-    ws.BeginTrans
-
-    If oldInfo.nomenclatureTypeID <> newNomenclatureTypeID _
-       Or StrComp(oldInfo.nomenclatureCode, newNomenclatureCode, vbTextCompare) <> 0 Then
-        If NomenclatureExists(newNomenclatureTypeID, newNomenclatureCode, nomenclatureID, db) Then
-            ShowWarning "Номенклатура с таким кодом уже существует для выбранного типа."
-            GoTo CleanExit
+Sub RemoveBrokenReferences(targetProject As Object)
+    Dim i As Long
+    For i = targetProject.References.Count To 1 Step -1
+        If targetProject.References(i).IsBroken Then
+            targetProject.References.Remove targetProject.References(i)
         End If
-    End If
-
-    Set rs = db.OpenRecordset( _
-        "SELECT * FROM Nomenclatures WHERE NomenclatureID = " & nomenclatureID, _
-        dbOpenDynaset)
-
-    If rs.EOF Then
-        ShowWarning "Номенклатура не найдена."
-        GoTo CleanExit
-    End If
-
-    rs.Edit
-    rs.Fields(FLD_TYPE_ID).Value = newNomenclatureTypeID
-    rs.Fields(FLD_CODE).Value = newNomenclatureCode
-
-    If LenB(newNomenclatureName) > 0 Then
-        rs.Fields(FLD_NAME).Value = Left$(newNomenclatureName, 255)
-    Else
-        rs.Fields(FLD_NAME).Value = Null
-    End If
-
-    If LenB(newDescription) > 0 Then
-        rs.Fields(FLD_DESC).Value = newDescription
-    Else
-        rs.Fields(FLD_DESC).Value = Null
-    End If
-
-    rs.Update
-    rs.Close
-    Set rs = Nothing
-
-    If oldInfo.nomenclatureTypeID <> newNomenclatureTypeID Then
-        WriteAuditEvent db, TBL_NOMS, nomenclatureID, FLD_TYPE_ID, CStr(oldInfo.nomenclatureTypeID), CStr(newNomenclatureTypeID), "UPDATE", "NomenclatureUpdate", changedByUserId, Null
-    End If
-
-    If StrComp(oldInfo.nomenclatureCode, newNomenclatureCode, vbBinaryCompare) <> 0 Then
-        WriteAuditEvent db, TBL_NOMS, nomenclatureID, FLD_CODE, oldInfo.nomenclatureCode, newNomenclatureCode, "UPDATE", "NomenclatureUpdate", changedByUserId, Null
-    End If
-
-    If NzStr(oldInfo.nomenclatureName) <> NzStr(newNomenclatureName) Then
-        WriteAuditEvent db, TBL_NOMS, nomenclatureID, FLD_NAME, oldInfo.nomenclatureName, newNomenclatureName, "UPDATE", "NomenclatureUpdate", changedByUserId, Null
-    End If
-
-    If NzStr(oldInfo.description) <> NzStr(newDescription) Then
-        WriteAuditEvent db, TBL_NOMS, nomenclatureID, FLD_DESC, oldInfo.description, newDescription, "UPDATE", "NomenclatureUpdate", changedByUserId, Null
-    End If
-
-    ws.CommitTrans
-
-CleanExit:
-    On Error Resume Next
-    If Not rs Is Nothing Then rs.Close
-    Set rs = Nothing
-    Set db = Nothing
-    Set ws = Nothing
-    Exit Sub
-
-EH:
-    On Error Resume Next
-    ws.Rollback
-    ShowError "UpdateNomenclature", Err.Number, , Err.description
-    Resume CleanExit
+    Next i
 End Sub
 
-Public Sub DeleteNomenclatureSafe(ByVal nomenclatureID As Long, ByVal changedByUserId As Long)
-    Dim ws As DAO.Workspace
-    Dim db As DAO.Database
-    Dim rs As DAO.Recordset
-    Dim info As NomenclatureInfo
-    Dim cnt As Long
+Sub AddRequiredReferences(targetProject As Object, version As Integer)
+    Dim excelVersion As Integer
+    excelVersion = version 'Val(Application.version)
+    
+    ' Списки библиотек для разных версий Excel
+    Dim libraries2007 As Variant
+    Dim libraries2016 As Variant
+    
+    ' Библиотеки для Excel 2007/2010 (Office 12.0)
+    libraries2007 = Array( _
+        "Microsoft ActiveX Data Objects 6.0 Library", _
+        "Microsoft Office 12.0 Access database engine Object Library", _
+        "Microsoft Word 12.0 Object Library", _
+        "Microsoft DAO 3.6 Object Library", _
+        "Excel", _
+        "VBA", _
+        "Office", _
+        "stdole", _
+        "Scripting" _
+    )
 
-    If nomenclatureID <= 0 Then
-        ShowWarning "Некорректный NomenclatureID."
-        GoTo CleanExit
+    ' Библиотеки для Excel 2016 (Office 16.0)
+    libraries2016 = Array( _
+        "Microsoft ActiveX Data Objects 6.0 Library", _
+        "Microsoft Office 16.0 Access database engine Object Library", _
+        "Microsoft Word 16.0 Object Library", _
+        "Microsoft DAO 3.6 Object Library", _
+        "Excel", _
+        "VBA", _
+        "Office", _
+        "stdole", _
+        "Scripting" _
+    )
+
+    ' Выбираем нужный список библиотек
+    Dim libraries As Variant
+    If excelVersion <= 14 Then ' Excel 2007/2010
+        libraries = libraries2007
+    Else ' Excel 2013 и новее
+        libraries = libraries2016
     End If
-
-    info = GetNomenclatureById(nomenclatureID)
-    If info.nomenclatureID = 0 Then
-        ShowWarning "Номенклатура не найдена."
-        GoTo CleanExit
-    End If
-
-    Set ws = DBEngine.Workspaces(0)
-    Set db = OpenCurrentDb()
-
-    Set rs = db.OpenRecordset( _
-        "SELECT COUNT(*) AS Cnt FROM Products WHERE NomenclatureID = " & nomenclatureID & " AND IsDeleted = False", _
-        dbOpenSnapshot)
-
-    If Not rs.EOF Then cnt = NzLng(rs.Fields(0).Value)
-    rs.Close
-    Set rs = Nothing
-
-    If cnt > 0 Then
-        ShowWarning "Номенклатуру нельзя удалить, так как она используется в изделиях. Количество связанных записей: " & cnt & "."
-        GoTo CleanExit
-    End If
-
-    On Error GoTo EH
-    ws.BeginTrans
-
-    db.Execute "DELETE FROM Nomenclatures WHERE NomenclatureID = " & nomenclatureID, dbFailOnError
-
-    WriteAuditEvent db, TBL_NOMS, nomenclatureID, FLD_CODE, info.nomenclatureCode, "DELETED", "DELETE", "NomenclatureDelete", changedByUserId, Null
-
-    ws.CommitTrans
-
-CleanExit:
-    On Error Resume Next
-    If Not rs Is Nothing Then rs.Close
-    Set rs = Nothing
-    Set db = Nothing
-    Set ws = Nothing
-    Exit Sub
-
-EH:
-    On Error Resume Next
-    ws.Rollback
-    ShowError "DeleteNomenclatureSafe", Err.Number, , Err.description
-    Resume CleanExit
+    
+    ' Добавляем библиотеки
+    Dim libName As Variant
+    For Each libName In libraries
+        AddReferenceByExactName targetProject, CStr(libName)
+    Next libName
 End Sub
 
-Public Function GetAllNomenclatures(Optional ByVal nomenclatureTypeID As Long = 0) As DAO.Recordset
-    Dim db As DAO.Database
-    Dim sql As String
-
-    Set db = OpenCurrentDb()
-
-    sql = "SELECT N.NomenclatureID, N.NomenclatureTypeID, T.TypeName, N.NomenclatureCode, N.NomenclatureName, N.Description " & _
-          "FROM Nomenclatures AS N " & _
-          "INNER JOIN NomenclatureTypes AS T ON N.NomenclatureTypeID = T.NomenclatureTypeID"
-
-    If nomenclatureTypeID > 0 Then
-        sql = sql & " WHERE N.NomenclatureTypeID = " & nomenclatureTypeID
+Sub AddReferenceByExactName(targetProject As Object, refName As String)
+    Dim ref As Object
+    Dim exists As Boolean
+    Dim i As Long
+    
+    ' Проверяем, есть ли уже такая ссылка
+    exists = False
+    For i = 1 To targetProject.References.Count
+        If targetProject.References(i).name = refName Then
+            exists = True
+            Exit For
+        End If
+    Next i
+    
+    ' Если ссылки нет, пытаемся добавить
+    If Not exists Then
+        On Error Resume Next
+        
+        ' Пробуем разные способы добавления для разных типов библиотек
+        Select Case refName
+            ' Для ADO
+            Case "Microsoft ActiveX Data Objects 6.0 Library"
+                targetProject.References.AddFromFile "C:\Program Files\Common Files\System\ado\msado15.tlb"
+            
+            ' Для Access Database Engine
+            Case "Microsoft Office 12.0 Access database engine Object Library"
+                targetProject.References.AddFromFile "C:\Program Files\Common Files\microsoft shared\OFFICE12\ACEDAO.DLL"
+            
+            Case "Microsoft Office 16.0 Access database engine Object Library"
+                targetProject.References.AddFromFile "C:\Program Files\Common Files\microsoft shared\OFFICE16\ACEDAO.DLL"
+                targetProject.References.addfromguid _
+                    GUID:="{4AC9E1DA-5BAD-4AC7-86E3-24F4CDCECA28}", _
+                    Major:=12, _
+                    Minor:=0
+            
+            ' Для Word
+            Case "Microsoft Word 12.0 Object Library"
+                targetProject.References.AddFromFile "C:\Program Files\Microsoft Office\Office12\MSWORD.OLB"
+                targetProject.References.AddFromFile "C:\Program Files\Microsoft Office\root\Office12\MSWORD.OLB"
+            
+            Case "Microsoft Word 16.0 Object Library"
+                targetProject.References.AddFromFile "C:\Program Files\Microsoft Office\Office16\MSWORD.OLB"
+                targetProject.References.AddFromFile "C:\Program Files\Microsoft Office\root\Office16\MSWORD.OLB"
+            ' Стандартные библиотеки
+            Case "Excel"
+                targetProject.References.AddFromFile "C:\Program Files\Microsoft Office\Office12\EXCEL.EXE"
+            
+            Case "VBA"
+                targetProject.References.AddFromFile "C:\Program Files\Common Files\Microsoft Shared\VBA\VBA6\VBE6EXT.OLB"
+            
+            Case "Office"
+                targetProject.References.AddFromFile "C:\Program Files\Microsoft Office\Office12\MSO.DLL"
+            
+            Case "stdole"
+                targetProject.References.AddFromFile "C:\Windows\System32\stdole2.tlb"
+            
+            Case "Scripting"
+                targetProject.References.AddFromFile "C:\Windows\System32\scrrun.dll"
+            
+'            Case "Microsoft DAO 3.6 Object Library"
+'                targetProject.References.AddFromFile "C:\Program Files\Common Files\Microsoft Shared\DAO\dao360.dll"
+        End Select
+        
+        If Err.Number <> 0 Then
+            ' Если не удалось добавить по пути, пробуем найти в доступных ссылках
+            For Each ref In Application.VBE.ActiveVBProject.References
+                If ref.name = refName Then
+                    targetProject.References.AddFromFile ref.FullPath
+                    Exit For
+                End If
+            Next ref
+        End If
+        
+        On Error GoTo 0
     End If
-
-    sql = sql & " ORDER BY T.TypeName, N.NomenclatureCode, N.NomenclatureName"
-
-    Set GetAllNomenclatures = db.OpenRecordset(sql, dbOpenSnapshot)
-End Function
-
-
+End Sub
 ```
 
 ## Черновые заметки
