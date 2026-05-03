@@ -32,10 +32,8 @@ SORT deadline ASC
 ## Взаимосвязи (исходящие вызовы)
 
 ```dataviewjs
-// Какие типы считаем VBA-кодом
 const TYPES = ['module', 'form', 'class'];
 
-// Проект текущего модуля (ссылка)
 const current = dv.current();
 const currentProject = current.project;
 
@@ -44,13 +42,14 @@ if (!currentProject) {
   return;
 }
 
-// Фильтруем только те страницы, у которых такой же project
-// p.project может быть ссылкой или массивом ссылок, поэтому используем dv.func.contains
 const allPages = dv.pages()
   .where(p => TYPES.includes(p.type))
-  .where(p => p.project && dv.func.contains(p.project, currentProject));
+  .where(p => p.project && dv.func.contains(p.project, currentProject))
+  .array();
 
-// === Функция: вытащить все VBA-блоки ```vba из файла ===
+// Диагностика — сохраняем, но не показываем
+const debugModulesCount = allPages.length;
+
 async function getVbaBlocks(path) {
   const text = await dv.io.load(path);
   if (!text) return [];
@@ -61,26 +60,27 @@ async function getVbaBlocks(path) {
 
   for (const line of text.split('\n')) {
     const trimmed = line.trim();
-    if (!inBlock && trimmed.startsWith('```vba')) {
+
+    if (!inBlock && trimmed.toLowerCase().startsWith('```vba')) {
       inBlock = true;
       currentBlock = [];
       continue;
     }
+
     if (inBlock && trimmed.startsWith('```')) {
       inBlock = false;
       blocks.push(currentBlock.join('\n'));
       currentBlock = [];
       continue;
     }
+
     if (inBlock) currentBlock.push(line);
   }
+
   return blocks;
 }
 
-// Регэксп объявления процедур / функций (как в твоём шаблоне)
 const reProcDecl = /^\s*(?:(Public|Private)\s+)?(?:Static\s+)?(Sub|Function)\s+([A-Za-z0-9_]+)/i;
-
-// Индекс: имя процедуры → список мест, где она объявлена
 const procIndex = {};
 
 for (const page of allPages) {
@@ -88,6 +88,7 @@ for (const page of allPages) {
 
   for (const block of vbaBlocks) {
     const lines = block.split('\n');
+
     for (const line of lines) {
       const m = line.match(reProcDecl);
       if (!m) continue;
@@ -104,14 +105,19 @@ for (const page of allPages) {
   }
 }
 
-// === Анализируем текущий модуль: кто кого вызывает ===
+// Диагностика — сохраняем, но не показываем
+const debugProcNames = Object.keys(procIndex);
+const debugProcCount = debugProcNames.length;
 
 const currentBlocks = await getVbaBlocks(current.file.path);
 
-// Вызовы: Foo(...), Call Bar(...)
-const reCall = /\b(?:Call\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*(?=\()/g;
+// будем искать вызовы более аккуратно:
+// 1) Call Name ...
+// 2) Name(...)
+// 3) Name <что-то>, но не Name =, не Dim Name, не Set Name =
+const reCallPattern = /\b(?:Call\s+)?([A-Za-z_][A-Za-z0-9_]*)\b/g;
 
-const rows = [];
+const callMap = new Map();
 
 for (const block of currentBlocks) {
   const lines = block.split('\n');
@@ -120,11 +126,8 @@ for (const block of currentBlocks) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const trimmed = line.trim();
-
-    // пропускаем комментарии
     if (trimmed.startsWith("'")) continue;
 
-    // новая процедура / функция
     const declMatch = line.match(reProcDecl);
     if (declMatch) {
       currentProc = declMatch[3];
@@ -133,33 +136,90 @@ for (const block of currentBlocks) {
 
     if (!currentProc) continue;
 
-    // ищем вызовы
+    // Не считать строки, где имя функции слева от "=":
+    //   FuncName = ...
+    //   Set obj = ...
+    //   Dim FuncName As ...
+    // Обработаем это внутри цикла по совпадениям.
+
     let m;
-    while ((m = reCall.exec(line)) !== null) {
+    while ((m = reCallPattern.exec(line)) !== null) {
       const calledName = m[1];
+
+      // Позиция найденного имени в строке
+      const idx = m.index;
+
+      // Левая часть строки до имени
+      const before = line.slice(0, idx);
+      const after = line.slice(idx + calledName.length);
+
+      const beforeTrim = before.trim();
+      const afterTrim = after.trimStart();
+
+      // 1) Если это присваивание результата функции: "FuncName = ..."
+      //    — имя стоит в начале строки / после пробелов, а сразу после него "="
+      const isAssignmentResult =
+        beforeTrim === "" && afterTrim.startsWith("=");
+
+      if (isAssignmentResult) {
+        // Это возврат из функции, НЕ вызов
+        continue;
+      }
+
+      // 2) Если это объявление переменной: "Dim FuncName As ..."
+      if (/^\s*Dim\s+$/i.test(before) || /^\s*Dim\s+/i.test(beforeTrim)) {
+        continue;
+      }
+
+      // 3) Если это левая часть Set: "Set obj = ..."
+      //    — нас интересуют вызовы, а не имя слева от Set/=
+      if (/^\s*Set\s+$/i.test(before) || /^\s*Set\s+/i.test(beforeTrim)) {
+        continue;
+      }
+
+      // 4) Если после имени нет "(", нет пробела + аргументов, и нет "Call",
+      //    можно попасть в кучу ложных срабатываний. Но:
+      //    - уже отсекли очевидные присваивания и Dim/Set.
+      //    - оставим это как потенциальный вызов (вызов без скобок: Name arg1, arg2).
+      //    При желании можно ещё проверить, что после имени не конец строки и не оператор.
+
       const targets = procIndex[calledName];
       if (!targets) continue;
 
       for (const t of targets) {
-        // если не хочешь самовызовы — можно фильтрануть
+        // не считаем самовызов внутри того же модуля той же процедуры
         if (t.modulePath === current.file.path && calledName === currentProc) continue;
 
-        rows.push([
-          current.file.link,   // Откуда (модуль)
-          currentProc,         // Какая процедура
-          t.moduleLink,        // Куда (модуль)
-          calledName           // Что вызывает
-        ]);
+        const key = `${currentProc}||${t.modulePath}`;
+        if (!callMap.has(key)) {
+          callMap.set(key, {
+            fromProc: currentProc,
+            toModuleLink: t.moduleLink,
+            calledNames: new Set()
+          });
+        }
+
+        callMap.get(key).calledNames.add(calledName);
       }
     }
   }
+}
+
+const rows = [];
+for (const entry of callMap.values()) {
+  const calledList = Array.from(entry.calledNames).sort().join(", ");
+  rows.push([
+    entry.fromProc,
+    entry.toModuleLink,
+    calledList
+  ]);
 }
 
 if (rows.length === 0) {
   dv.paragraph('Исходящих вызовов других модулей/форм/классов в рамках этого проекта не найдено.');
 } else {
   dv.table(
-    ['Откуда (модуль)', 'Процедура', 'Куда (модуль)', 'Что вызывает'],
+    ['Процедура', 'Куда (модуль)', 'Что вызывает'],
     rows
   );
 }
