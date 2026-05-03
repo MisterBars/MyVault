@@ -177,53 +177,105 @@ for (const line of text.split("\n")) {
     current = [];
     continue;
   }
+
   if (inBlock && line.trim().startsWith("```")) {
     inBlock = false;
     vbaBlocks.push(current.join("\n"));
     current = [];
     continue;
   }
+
   if (inBlock) current.push(line);
 }
 
-const re = /^\s*(?:(Public|Private)\s+)?(?:Static\s+)?(Sub|Function)\s+([A-Za-z0-9_]+)/i;
+const reDecl = /^\s*(?:(Public|Private)\s+)?(?:Static\s+)?(Sub|Function)\s+([A-Za-z0-9_]+)/i;
+const reReturnType = /\)\s*As\s+([A-Za-z0-9_\.]+)/i;
+const reTag = /^'\s*@([a-zA-Z0-9_]+):\s*(.+)$/i;
 
 const rows = [];
 
 for (const block of vbaBlocks) {
   const lines = block.split("\n");
+
   for (let i = 0; i < lines.length; i++) {
-    const m = lines[i].match(re);
+    const m = lines[i].match(reDecl);
     if (!m) continue;
 
-    const scopeRaw = m[1];               // Public / Private / undefined
-    const kindRaw = m[2];                // Sub / Function
+    const scopeRaw = m[1];
+    const kindRaw = m[2];
     const name = m[3];
 
-    const kind = kindRaw.toLowerCase() === "sub" ? "Процедура" : "Функция";
-    const scope = scopeRaw
-      ? scopeRaw                       // "Public" или "Private"
-      : "По умолчанию (Public)";       // ничего не указано → Public[web:369][web:375]
+    const kindLower = String(kindRaw ?? "").toLowerCase();
+    const kind = kindLower === "sub" ? "Процедура" : "Функция";
+    const scope = scopeRaw ? String(scopeRaw) : "По умолчанию (Public)";
 
-    let desc = "";
-    if (i + 1 < lines.length) {
-      const next = lines[i + 1].trim();
-      const mDesc = next.match(/^'\s*@desc:\s*(.+)$/i);
-      if (mDesc) desc = mDesc[1];
+    let j = i;
+    while (j < lines.length - 1 && lines[j].trim().endsWith("_")) {
+      j++;
     }
 
-    rows.push([name, kind, scope, desc]);
+    const signatureLines = lines.slice(i, j + 1);
+    const signatureText = signatureLines.join(" ");
+    const mReturn = signatureText.match(reReturnType);
+    const returnType = kind === "Функция" && mReturn ? String(mReturn[1]) : "";
+
+    const tags = {
+      desc: "",
+      role: "",
+      todo: ""
+    };
+
+    let k = j + 1;
+
+    while (k < lines.length) {
+      const cur = lines[k].trim();
+
+      if (cur === "") {
+        k++;
+        continue;
+      }
+
+      const tagMatch = cur.match(reTag);
+      if (!tagMatch) break;
+
+      const tagName = String(tagMatch[1] ?? "").toLowerCase();
+      const tagValue = String(tagMatch[2] ?? "").trim();
+
+      if (Object.prototype.hasOwnProperty.call(tags, tagName)) {
+        tags[tagName] = tagValue;
+      }
+
+      k++;
+    }
+
+    rows.push([
+      name,
+      kind,
+      scope,
+      returnType,
+      tags.desc,
+      tags.role,
+      tags.todo
+    ]);
   }
 }
 
 if (rows.length === 0) {
   dv.paragraph("Процедуры и функции в коде не найдены.");
 } else {
-  dv.table(["Имя", "Тип", "Область", "Описание"], rows);
+  dv.table(
+    ["Имя", "Тип", "Область", "Возврат", "Описание", "Роль", "TODO"],
+    rows
+  );
 }
 ```
 # Код
 ```vba
+' @desc: **что делает конкретно эта процедура**
+' @role: **какое место она занимает в системе**
+' @todo: **заметка по процедуре/функции**
+
+
 Option Explicit
 
 ' Функция изменения значений констант
