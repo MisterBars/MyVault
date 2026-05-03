@@ -32,10 +32,8 @@ SORT deadline ASC
 ## Взаимосвязи (исходящие вызовы)
 
 ```dataviewjs
-// Какие типы считаем VBA-кодом
 const TYPES = ['module', 'form', 'class'];
 
-// Проект текущего модуля (ссылка)
 const current = dv.current();
 const currentProject = current.project;
 
@@ -44,13 +42,14 @@ if (!currentProject) {
   return;
 }
 
-// Фильтруем только те страницы, у которых такой же project
-// p.project может быть ссылкой или массивом ссылок, поэтому используем dv.func.contains
 const allPages = dv.pages()
   .where(p => TYPES.includes(p.type))
-  .where(p => p.project && dv.func.contains(p.project, currentProject));
+  .where(p => p.project && dv.func.contains(p.project, currentProject))
+  .array();
 
-// === Функция: вытащить все VBA-блоки ```vba из файла ===
+// Диагностика — сохраняем, но не показываем
+const debugModulesCount = allPages.length;
+
 async function getVbaBlocks(path) {
   const text = await dv.io.load(path);
   if (!text) return [];
@@ -61,26 +60,28 @@ async function getVbaBlocks(path) {
 
   for (const line of text.split('\n')) {
     const trimmed = line.trim();
-    if (!inBlock && trimmed.startsWith('```vba')) {
+
+    if (!inBlock && trimmed.toLowerCase().startsWith('```vba')) {
       inBlock = true;
       currentBlock = [];
       continue;
     }
+
     if (inBlock && trimmed.startsWith('```')) {
       inBlock = false;
       blocks.push(currentBlock.join('\n'));
       currentBlock = [];
       continue;
     }
+
     if (inBlock) currentBlock.push(line);
   }
+
   return blocks;
 }
 
-// Регэксп объявления процедур / функций (как в твоём шаблоне)
 const reProcDecl = /^\s*(?:(Public|Private)\s+)?(?:Static\s+)?(Sub|Function)\s+([A-Za-z0-9_]+)/i;
 
-// Индекс: имя процедуры → список мест, где она объявлена
 const procIndex = {};
 
 for (const page of allPages) {
@@ -88,6 +89,7 @@ for (const page of allPages) {
 
   for (const block of vbaBlocks) {
     const lines = block.split('\n');
+
     for (const line of lines) {
       const m = line.match(reProcDecl);
       if (!m) continue;
@@ -104,14 +106,16 @@ for (const page of allPages) {
   }
 }
 
-// === Анализируем текущий модуль: кто кого вызывает ===
+// Диагностика — сохраняем, но не показываем
+const debugProcNames = Object.keys(procIndex);
+const debugProcCount = debugProcNames.length;
 
 const currentBlocks = await getVbaBlocks(current.file.path);
 
 // Вызовы: Foo(...), Call Bar(...)
 const reCall = /\b(?:Call\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*(?=\()/g;
 
-const rows = [];
+const callMap = new Map();
 
 for (const block of currentBlocks) {
   const lines = block.split('\n');
@@ -121,10 +125,8 @@ for (const block of currentBlocks) {
     const line = lines[i];
     const trimmed = line.trim();
 
-    // пропускаем комментарии
     if (trimmed.startsWith("'")) continue;
 
-    // новая процедура / функция
     const declMatch = line.match(reProcDecl);
     if (declMatch) {
       currentProc = declMatch[3];
@@ -133,7 +135,6 @@ for (const block of currentBlocks) {
 
     if (!currentProc) continue;
 
-    // ищем вызовы
     let m;
     while ((m = reCall.exec(line)) !== null) {
       const calledName = m[1];
@@ -141,29 +142,44 @@ for (const block of currentBlocks) {
       if (!targets) continue;
 
       for (const t of targets) {
-        // если не хочешь самовызовы — можно фильтрануть
         if (t.modulePath === current.file.path && calledName === currentProc) continue;
 
-        rows.push([
-          current.file.link,   // Откуда (модуль)
-          currentProc,         // Какая процедура
-          t.moduleLink,        // Куда (модуль)
-          calledName           // Что вызывает
-        ]);
+        const key = `${currentProc}||${t.modulePath}`;
+        if (!callMap.has(key)) {
+          callMap.set(key, {
+            fromProc: currentProc,
+            toModuleLink: t.moduleLink,
+            calledNames: new Set()
+          });
+        }
+
+        callMap.get(key).calledNames.add(calledName);
       }
     }
   }
+}
+
+const rows = [];
+
+for (const entry of callMap.values()) {
+  const calledList = Array.from(entry.calledNames).sort().join(", ");
+  rows.push([
+    entry.fromProc,
+    entry.toModuleLink,
+    calledList
+  ]);
 }
 
 if (rows.length === 0) {
   dv.paragraph('Исходящих вызовов других модулей/форм/классов в рамках этого проекта не найдено.');
 } else {
   dv.table(
-    ['Откуда (модуль)', 'Процедура', 'Куда (модуль)', 'Что вызывает'],
+    ['Процедура', 'Куда (модуль)', 'Что вызывает'],
     rows
   );
 }
 ```
+
 # Функции и процедуры
 ```dataviewjs
 const page = dv.current();
@@ -300,29 +316,35 @@ Private Const FLD_NAME As String = "NomenclatureName"
 Private Const FLD_DESC As String = "Description"
 
 Private Sub ValidateNomenclatureInput(ByVal nomenclatureTypeID As Long, ByVal nomenclatureCode As String, ByVal nomenclatureName As String)
+' @desc: Проверяет правильность ввода номенклатуры
+' @role: Validation
+' @todo: --
     nomenclatureCode = Trim$(nomenclatureCode)
     nomenclatureName = Trim$(nomenclatureName)
     Dim message As String
     message = Empty
     If nomenclatureTypeID <= 0 Then
-        message = message + "Íå âûáðàí òèï íîìåíêëàòóðû." + vbCrLf
+        message = message + "Не выбран тип номенклатуры." + vbCrLf
     End If
 
     If LenB(nomenclatureCode) = 0 Then
-        message = message + "Íå çàïîëíåí êîä íîìåíêëàòóðû." + vbCrLf
+        message = message + "Не заполнен код номенклатуры." + vbCrLf
     End If
 
     If Len(nomenclatureCode) > 50 Then
-        message = message + "Êîä íîìåíêëàòóðû íå äîëæåí áûòü äëèííåå 50 ñèìâîëîâ." + vbCrLf
+        message = message + "Код номенклатуры не должен быть длиннее 50 символов." + vbCrLf
     End If
 
     If Len(nomenclatureName) > 255 Then
-        message = message + "Íàèìåíîâàíèå íîìåíêëàòóðû íå äîëæíî áûòü äëèííåå 255 ñèìâîëîâ." + vbCrLf
+        message = message + "Наименование номенклатуры не должно быть длиннее 255 символов." + vbCrLf
     End If
     If message <> Empty Then ShowWarning message
 End Sub
 
 Public Function GetNomenclatureById(ByVal nomenclatureID As Long) As NomenclatureInfo
+' @desc: Получает номенклатуру по её ID
+' @role: Query.Read
+' @todo: --
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     Dim info As NomenclatureInfo
@@ -354,6 +376,9 @@ Public Function GetNomenclatureById(ByVal nomenclatureID As Long) As Nomenclatur
 End Function
 
 Public Function GetNomenclatureIdByCode(ByVal nomenclatureCode As String) As Long
+' @desc: Получает ID номенклатуры по её коду
+' @role: Query.Read
+' @todo: --
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     
@@ -389,6 +414,9 @@ Public Function NomenclatureExists( _
     ByVal nomenclatureCode As String, _
     Optional ByVal excludeID As Long = 0, _
     Optional ByVal db As DAO.Database = Nothing) As Boolean
+' @desc: Проверяет существание номенклатуры по её ID и коду
+' @role: Query.Read
+' @todo: --
 
     Dim ownDb As Boolean
     Dim rs As DAO.Recordset
@@ -425,6 +453,9 @@ Public Function CreateNomenclature( _
     ByVal nomenclatureName As String, _
     ByVal description As String, _
     ByVal changedByUserId As Long) As Long
+' @desc: Безопасное создание номенклатуры
+' @role: Query.Write
+' @todo: --
 
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
@@ -438,7 +469,7 @@ Public Function CreateNomenclature( _
     ValidateNomenclatureInput nomenclatureTypeID, nomenclatureCode, nomenclatureName
 
     If GetNomenclatureTypeById(nomenclatureTypeID).nomenclatureTypeID = 0 Then
-        ShowWarning "Óêàçàííûé òèï íîìåíêëàòóðû íå íàéäåí."
+        ShowWarning "Указанный тип номенклатуры не найден."
         GoTo CleanExit
     End If
 
@@ -449,7 +480,7 @@ Public Function CreateNomenclature( _
     ws.BeginTrans
 
     If NomenclatureExists(nomenclatureTypeID, nomenclatureCode, 0, db) Then
-        ShowWarning "Íîìåíêëàòóðà ñ òàêèì êîäîì óæå ñóùåñòâóåò äëÿ âûáðàííîãî òèïà."
+        ShowWarning "Номенклатура с таким кодом уже существует для выбранного типа."
         GoTo CleanExit
     End If
 
@@ -508,14 +539,16 @@ Public Sub UpdateNomenclature( _
     ByVal newNomenclatureName As String, _
     ByVal newDescription As String, _
     ByVal changedByUserId As Long)
-
+' @desc: Безопасное обновление номенклатуры
+' @role: Query.Update
+' @todo: --
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     Dim oldInfo As NomenclatureInfo
 
     If nomenclatureID <= 0 Then
-        ShowWarning "Íåêîððåêòíûé NomenclatureID."
+        ShowWarning "Некорректный NomenclatureID."
         GoTo CleanExit
     End If
 
@@ -527,12 +560,12 @@ Public Sub UpdateNomenclature( _
 
     oldInfo = GetNomenclatureById(nomenclatureID)
     If oldInfo.nomenclatureID = 0 Then
-        ShowWarning "Íîìåíêëàòóðà íå íàéäåíà."
+        ShowWarning "Номенклатура не найдена."
         GoTo CleanExit
     End If
 
     If GetNomenclatureTypeById(newNomenclatureTypeID).nomenclatureTypeID = 0 Then
-        ShowWarning "Óêàçàííûé òèï íîìåíêëàòóðû íå íàéäåí."
+        ShowWarning "Указанный тип номенклатуры не найден."
         GoTo CleanExit
     End If
 
@@ -545,7 +578,7 @@ Public Sub UpdateNomenclature( _
     If oldInfo.nomenclatureTypeID <> newNomenclatureTypeID _
        Or StrComp(oldInfo.nomenclatureCode, newNomenclatureCode, vbTextCompare) <> 0 Then
         If NomenclatureExists(newNomenclatureTypeID, newNomenclatureCode, nomenclatureID, db) Then
-            ShowWarning "Íîìåíêëàòóðà ñ òàêèì êîäîì óæå ñóùåñòâóåò äëÿ âûáðàííîãî òèïà."
+            ShowWarning "Номенклатура с таким кодом уже существует для выбранного типа."
             GoTo CleanExit
         End If
     End If
@@ -555,7 +588,7 @@ Public Sub UpdateNomenclature( _
         dbOpenDynaset)
 
     If rs.EOF Then
-        ShowWarning "Íîìåíêëàòóðà íå íàéäåíà."
+        ShowWarning "Номенклатура не найдена."
         GoTo CleanExit
     End If
 
@@ -620,13 +653,13 @@ Public Sub DeleteNomenclatureSafe(ByVal nomenclatureID As Long, ByVal changedByU
     Dim cnt As Long
 
     If nomenclatureID <= 0 Then
-        ShowWarning "Íåêîððåêòíûé NomenclatureID."
+        ShowWarning "Некорректный NomenclatureID."
         GoTo CleanExit
     End If
 
     info = GetNomenclatureById(nomenclatureID)
     If info.nomenclatureID = 0 Then
-        ShowWarning "Íîìåíêëàòóðà íå íàéäåíà."
+        ShowWarning "Номенклатура не найдена."
         GoTo CleanExit
     End If
 
@@ -642,7 +675,7 @@ Public Sub DeleteNomenclatureSafe(ByVal nomenclatureID As Long, ByVal changedByU
     Set rs = Nothing
 
     If cnt > 0 Then
-        ShowWarning "Íîìåíêëàòóðó íåëüçÿ óäàëèòü, òàê êàê îíà èñïîëüçóåòñÿ â èçäåëèÿõ. Êîëè÷åñòâî ñâÿçàííûõ çàïèñåé: " & cnt & "."
+        ShowWarning "Номенклатуру нельзя удалить, так как она используется в изделиях. Количество связанных записей: " & cnt & "."
         GoTo CleanExit
     End If
 

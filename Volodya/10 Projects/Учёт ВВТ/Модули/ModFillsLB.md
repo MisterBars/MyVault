@@ -584,7 +584,7 @@ End Sub
 
 Public Sub InitServiceFormState(ByVal lst1 As MSForms.ListBox, ByVal lst2 As MSForms.ListBox, ByVal serviceID As Long)
 ' @desc: инициализация формы служб
-' @role: Service
+' @role: UI
 ' @todo: --
     On Error GoTo EH
     Dim rs As DAO.Recordset

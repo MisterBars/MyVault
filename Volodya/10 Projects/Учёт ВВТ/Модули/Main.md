@@ -1,7 +1,7 @@
 ---
 type: module
 status: done
-done_date: 2026-05-02
+done_date: 2026-05-03
 project: "[[Учёт ВВТ]]"
 skill: vba
 tags:
@@ -11,9 +11,10 @@ reward_xp: 50
 ---
 # Модуль
 ## Назначение
-- Для ведения логов изменений в БД
+- Кратко, за что отвечает модуль, какие задачи решает.
 ## Важные решения
-- функцию IsMissingOrNull пришлось продублировать, потому что редактор не видит основную
+- Почему выбрана такая архитектура.
+- Комментарии по производительности/ограничениям.
 
 ## Задачи по модулю
 
@@ -286,84 +287,19 @@ if (rows.length === 0) {
 ## Код
 ```vba
 ' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе**
+' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
 ' @todo: **заметка по процедуре/функции**
-
 
 Option Explicit
 
-Public Sub WriteAuditEvent( _
-    ByVal db As DAO.Database, _
-    ByVal tableName As String, _
-    ByVal RecordID As Long, _
-    ByVal fieldName As Variant, _
-    ByVal oldValue As Variant, _
-    ByVal newValue As Variant, _
-    ByVal actionType As String, _
-    ByVal businessEventType As String, _
-    ByVal changedByUserId As Long, _
-    Optional ByVal changeRequestId As Variant)
-    
-' @desc: Запись логов изменений в БД
-' @role: Audit
-' @todo: Добавить пакетную запись
-
-    Dim rs As DAO.Recordset
-
-    Set rs = db.OpenRecordset("AuditLog", dbOpenDynaset, dbAppendOnly)
-    rs.AddNew
-
-    rs.Fields("TableName").Value = Left$(NzStr(tableName), 100)
-    rs.Fields("RecordID").Value = RecordID
-
-    If Not IsMissingOrNull(fieldName) Then
-        rs.Fields("FieldName").Value = Left$(NzStr(fieldName), 100)
-    End If
-
-    If Not IsMissingOrNull(oldValue) Then
-        rs.Fields("OldValue").Value = NzStr(oldValue)
-    End If
-
-    If Not IsMissingOrNull(newValue) Then
-        rs.Fields("NewValue").Value = NzStr(newValue)
-    End If
-
-    rs.Fields("ActionType").Value = Left$(NzStr(actionType), 10)
-    rs.Fields("BusinessEventType").Value = Left$(NzStr(businessEventType), 50)
-
-    If changedByUserId > 0 Then
-        rs.Fields("ChangedByUserID").Value = changedByUserId
-    End If
-
-    If Not IsMissingOrNull(changeRequestId) Then
-        rs.Fields("ChangeRequestID").Value = CLng(changeRequestId)
-    End If
-    
+' Автозапуск для надстройки
+Public Sub Auto_Open()
     On Error Resume Next
-    rs.Fields("WorkstationName").Value = Left$(Environ$("COMPUTERNAME"), 100)
+    Call OpenAnotherExcelFile(ADDIN_PATH & "Encrypt_VVT.xlam", "Encrypt_VVT.xlam")
+    ConfigureReferencesForAddIn ThisWorkbook.VBProject, Val(Application.version)
+    CreateVVTMenu
     On Error GoTo 0
-
-    rs.Update
-    rs.Close
-    Set rs = Nothing
 End Sub
-
-Private Function IsMissingOrNull(ByVal v As Variant) As Boolean
-' @desc: Проверка не пустое ли значение
-' @role: Validation
-' @todo: --
-    If IsObject(v) Then
-        IsMissingOrNull = (v Is Nothing)
-    ElseIf IsNull(v) Then
-        IsMissingOrNull = True
-    ElseIf IsEmpty(v) Then
-        IsMissingOrNull = True
-    ElseIf VarType(v) = vbString Then
-        IsMissingOrNull = (Trim$(CStr(v)) = vbNullString)
-    Else
-        IsMissingOrNull = False
-    End If
-End Function
 
 ```
 

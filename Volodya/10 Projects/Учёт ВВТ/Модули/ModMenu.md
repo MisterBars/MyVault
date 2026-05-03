@@ -10,15 +10,11 @@ tags:
 reward_xp: 50
 ---
 # Модуль
-
 ## Назначение
-
-Кратко, за что отвечает модуль, какие задачи решает.
+- Для создание своего CommandBars меню 
 
 ## Важные решения
-
-- Почему выбрана такая архитектура.
-- Комментарии по производительности/ограничениям.
+- Удобно запускать функции из CommandBars
 
 ## Задачи по модулю
 
@@ -32,10 +28,8 @@ SORT deadline ASC
 ## Взаимосвязи (исходящие вызовы)
 
 ```dataviewjs
-// Какие типы считаем VBA-кодом
 const TYPES = ['module', 'form', 'class'];
 
-// Проект текущего модуля (ссылка)
 const current = dv.current();
 const currentProject = current.project;
 
@@ -44,13 +38,14 @@ if (!currentProject) {
   return;
 }
 
-// Фильтруем только те страницы, у которых такой же project
-// p.project может быть ссылкой или массивом ссылок, поэтому используем dv.func.contains
 const allPages = dv.pages()
   .where(p => TYPES.includes(p.type))
-  .where(p => p.project && dv.func.contains(p.project, currentProject));
+  .where(p => p.project && dv.func.contains(p.project, currentProject))
+  .array();
 
-// === Функция: вытащить все VBA-блоки ```vba из файла ===
+// Диагностика — сохраняем, но не показываем
+const debugModulesCount = allPages.length;
+
 async function getVbaBlocks(path) {
   const text = await dv.io.load(path);
   if (!text) return [];
@@ -61,26 +56,28 @@ async function getVbaBlocks(path) {
 
   for (const line of text.split('\n')) {
     const trimmed = line.trim();
-    if (!inBlock && trimmed.startsWith('```vba')) {
+
+    if (!inBlock && trimmed.toLowerCase().startsWith('```vba')) {
       inBlock = true;
       currentBlock = [];
       continue;
     }
+
     if (inBlock && trimmed.startsWith('```')) {
       inBlock = false;
       blocks.push(currentBlock.join('\n'));
       currentBlock = [];
       continue;
     }
+
     if (inBlock) currentBlock.push(line);
   }
+
   return blocks;
 }
 
-// Регэксп объявления процедур / функций (как в твоём шаблоне)
 const reProcDecl = /^\s*(?:(Public|Private)\s+)?(?:Static\s+)?(Sub|Function)\s+([A-Za-z0-9_]+)/i;
 
-// Индекс: имя процедуры → список мест, где она объявлена
 const procIndex = {};
 
 for (const page of allPages) {
@@ -88,6 +85,7 @@ for (const page of allPages) {
 
   for (const block of vbaBlocks) {
     const lines = block.split('\n');
+
     for (const line of lines) {
       const m = line.match(reProcDecl);
       if (!m) continue;
@@ -104,14 +102,16 @@ for (const page of allPages) {
   }
 }
 
-// === Анализируем текущий модуль: кто кого вызывает ===
+// Диагностика — сохраняем, но не показываем
+const debugProcNames = Object.keys(procIndex);
+const debugProcCount = debugProcNames.length;
 
 const currentBlocks = await getVbaBlocks(current.file.path);
 
 // Вызовы: Foo(...), Call Bar(...)
 const reCall = /\b(?:Call\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*(?=\()/g;
 
-const rows = [];
+const callMap = new Map();
 
 for (const block of currentBlocks) {
   const lines = block.split('\n');
@@ -121,10 +121,8 @@ for (const block of currentBlocks) {
     const line = lines[i];
     const trimmed = line.trim();
 
-    // пропускаем комментарии
     if (trimmed.startsWith("'")) continue;
 
-    // новая процедура / функция
     const declMatch = line.match(reProcDecl);
     if (declMatch) {
       currentProc = declMatch[3];
@@ -133,7 +131,6 @@ for (const block of currentBlocks) {
 
     if (!currentProc) continue;
 
-    // ищем вызовы
     let m;
     while ((m = reCall.exec(line)) !== null) {
       const calledName = m[1];
@@ -141,29 +138,44 @@ for (const block of currentBlocks) {
       if (!targets) continue;
 
       for (const t of targets) {
-        // если не хочешь самовызовы — можно фильтрануть
         if (t.modulePath === current.file.path && calledName === currentProc) continue;
 
-        rows.push([
-          current.file.link,   // Откуда (модуль)
-          currentProc,         // Какая процедура
-          t.moduleLink,        // Куда (модуль)
-          calledName           // Что вызывает
-        ]);
+        const key = `${currentProc}||${t.modulePath}`;
+        if (!callMap.has(key)) {
+          callMap.set(key, {
+            fromProc: currentProc,
+            toModuleLink: t.moduleLink,
+            calledNames: new Set()
+          });
+        }
+
+        callMap.get(key).calledNames.add(calledName);
       }
     }
   }
+}
+
+const rows = [];
+
+for (const entry of callMap.values()) {
+  const calledList = Array.from(entry.calledNames).sort().join(", ");
+  rows.push([
+    entry.fromProc,
+    entry.toModuleLink,
+    calledList
+  ]);
 }
 
 if (rows.length === 0) {
   dv.paragraph('Исходящих вызовов других модулей/форм/классов в рамках этого проекта не найдено.');
 } else {
   dv.table(
-    ['Откуда (модуль)', 'Процедура', 'Куда (модуль)', 'Что вызывает'],
+    ['Процедура', 'Куда (модуль)', 'Что вызывает'],
     rows
   );
 }
 ```
+
 # Функции и процедуры
 ```dataviewjs
 const page = dv.current();
@@ -283,6 +295,9 @@ Option Explicit
 Private Const VVT_BAR_NAME As String = "VVTMenu"
 
 Public Sub CreateVVTMenu()
+' @desc: Создает CommandBars меню
+' @role: UI
+' @todo: после создания основного функционала, доделать
     On Error Resume Next
     
     Dim cmdBarVVT As CommandBar
@@ -302,7 +317,7 @@ Public Sub CreateVVTMenu()
     If Dir(ThisWorkbook.Path & "\vvt_db.accdb") = "" Then
         Set btnDB = cmdBarVVT.Controls.Add(Type:=msoControlButton, Temporary:=True)
         With btnDB
-            .Caption = "Ñîçäàòü ÁÄ"
+            .Caption = "Создать БД"
             .Style = msoButtonCaption
             .BeginGroup = True
             .OnAction = "'" & ThisWorkbook.name & "'!CreateVVTDatabase"
@@ -310,14 +325,14 @@ Public Sub CreateVVTMenu()
     Else
         Set btnPathDB = cmdBarVVT.Controls.Add(Type:=msoControlButton, Temporary:=True)
         With btnPathDB
-            .Caption = "Âûáðàòü ÁÄ"
+            .Caption = "Выбрать БД"
             .Style = msoButtonCaption
             .BeginGroup = True
             .OnAction = "'" & ThisWorkbook.name & "'!ChangeDB"
         End With
         Set btnAuth = cmdBarVVT.Controls.Add(Type:=msoControlButton, Temporary:=True)
         With btnAuth
-            .Caption = "Ìåíþ"
+            .Caption = "Меню"
             .Style = msoButtonCaption
             .BeginGroup = True
             .OnAction = "'" & ThisWorkbook.name & "'!Auth"
@@ -325,31 +340,33 @@ Public Sub CreateVVTMenu()
     End If
 End Sub
 
-' Ñîçäàåòñÿ ïàíåëü ñî âñåìè èêîíêàìè, ïîòîì ìîæíî óäàëèòü
+' Создается панель со всеми иконками, потом можно удалить
 Sub ShowAllIcons()
+' @desc: Создает CommandBars меню с иконками
+' @role: UI
+' @todo: --
     Dim i As Long
     Dim topPosition As Long
     Dim cmdBar As CommandBar
     Dim ctrl As CommandBarButton
     
-    ' Óäàëÿåì ñòàðóþ ïàíåëü åñëè åñòü
+    ' Удаляем старую панель если есть
     On Error Resume Next
     Application.CommandBars("IconViewer").Delete
     On Error GoTo 0
     
-    ' Ñîçäàåì âðåìåííóþ ïàíåëü èíñòðóìåíòîâ
     Set cmdBar = Application.CommandBars.Add(name:="IconViewer", Temporary:=True)
     cmdBar.Visible = True
     cmdBar.Position = msoBarFloating
     
-    ' Äîáàâëÿåì êíîïêè ñ èêîíêàìè
-    For i = 1 To 2000 ' Ìîæíî óâåëè÷èòü äèàïàçîí
+    ' Добавляем кнопки с иконками
+    For i = 1 To 2000 ' Можно увеличить диапазон
         On Error Resume Next
         Set ctrl = cmdBar.Controls.Add(Type:=msoControlButton)
         ctrl.FaceId = i
         ctrl.TooltipText = "ID: " & i
         If Err.Number <> 0 Then
-            ' Ïðîïóñêàåì íåñóùåñòâóþùèå ID
+            ' Пропускаем несуществующие ID
             Err.Clear
             ctrl.Delete
         End If
