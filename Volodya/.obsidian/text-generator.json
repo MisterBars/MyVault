@@ -75,6 +75,7 @@
       "tags": "OpenAI,markdown,gpt-4-vision,vision,images",
       "authorUrl": "https://www.buymeacoffee.com/haouarine",
       "repo": "text-gen/tg-vision",
+      "installed": false,
       "downloads": 0
     },
     "smartConnections": {
@@ -87,6 +88,7 @@
       "tags": "smartConnections,smart-connections",
       "authorUrl": "https://www.buymeacoffee.com/haouarine",
       "repo": "text-gen/tg-smartConnections",
+      "installed": false,
       "downloads": 0
     },
     "Experimental": {
@@ -132,10 +134,34 @@
       "core": true,
       "folderName": "excalidrawPackage",
       "price": 2,
+      "installed": false,
       "downloads": 0
     }
   },
   "resources": {},
-  "installedPackagesHash": {},
+  "installedPackagesHash": {
+    "tts": {
+      "packageId": "tts",
+      "prompts": [
+        {
+          "promptId": "listen"
+        },
+        {
+          "promptId": "speakAlloy"
+        }
+      ],
+      "installedPrompts": [
+        {
+          "promptId": "listen",
+          "version": ""
+        },
+        {
+          "promptId": "speakAlloy",
+          "version": ""
+        }
+      ],
+      "version": "0.0.2"
+    }
+  },
   "subscriptions": []
 }
