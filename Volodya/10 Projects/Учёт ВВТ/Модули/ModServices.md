@@ -368,7 +368,7 @@ Private Const FLDCANEDIT As String = "CanEdit"
 Private Const FLDCANAPPROVE As String = "CanApprove"
 
 Private Sub ValidateServiceInput(ByVal serviceName As String, ByVal 
-' @desc: **что делает конкретно эта процедура**
+' @desc: Проверяет правильность ввода службы
 ' @role: **какое место она занимает в системе**
 ' @todo: **заметка по процедуре/функции**serviceCode As String)
     serviceName = Trim$(serviceName)
