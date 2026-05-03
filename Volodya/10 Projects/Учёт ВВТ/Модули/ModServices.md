@@ -10,18 +10,13 @@ tags:
 reward_xp: 50
 ---
 # Модуль
-
 ## Назначение
-
-Кратко, за что отвечает модуль, какие задачи решает.
+- Отвечает за CRUD служб.
 
 ## Важные решения
-
-- Почему выбрана такая архитектура.
-- Комментарии по производительности/ограничениям.
+- Также реализована работа со связями пользователей и служб.
 
 ## Задачи по модулю
-
 ```dataview
 TABLE status as "Статус", task_type as "Тип", deadline as "Срок"
 FROM ""
@@ -30,7 +25,6 @@ SORT deadline ASC
 ```
 
 ## Взаимосвязи (исходящие вызовы)
-
 ```dataviewjs
 const TYPES = ['module', 'form', 'class'];
 
@@ -341,10 +335,6 @@ if (rows.length === 0) {
 
 Option Explicit
 
-'=========================
-'Services + UserServices
-'=========================
-
 Public Type ServiceInfo
     serviceID As Long
     serviceName As String
@@ -377,7 +367,10 @@ Private Const FLDUSERID As String = "UserID"
 Private Const FLDCANEDIT As String = "CanEdit"
 Private Const FLDCANAPPROVE As String = "CanApprove"
 
-Private Sub ValidateServiceInput(ByVal serviceName As String, ByVal serviceCode As String)
+Private Sub ValidateServiceInput(ByVal serviceName As String, ByVal 
+' @desc: **что делает конкретно эта процедура**
+' @role: **какое место она занимает в системе**
+' @todo: **заметка по процедуре/функции**serviceCode As String)
     serviceName = Trim$(serviceName)
     serviceCode = Trim$(serviceCode)
     

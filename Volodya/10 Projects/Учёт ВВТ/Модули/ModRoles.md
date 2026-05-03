@@ -11,10 +11,9 @@ reward_xp: 50
 ---
 # Модуль
 ## Назначение
+- Отвечает за CRUD ролей
 
 ## Важные решения
-- Почему выбрана такая архитектура.
-- Комментарии по производительности/ограничениям.
 
 ## Задачи по модулю
 ```dataview
@@ -353,10 +352,10 @@ Public Const ROLE_CAN_EDIT_ANY_FIELD As String = "CanEditAny"
 Public Const ROLE_CAN_APPROVE_ANY_FIELD As String = "CanApproveAny"
 Public Const ROLE_CAN_CHANGE_OWN_PWD As String = "CanChangeOwnPwd"
 
-' ================================================================
-' Чтение роли по ID
-' ================================================================
 Public Function GetRoleById(ByVal roleID As Long) As RoleInfo
+' @desc: Чтение роли по ID
+' @role: Query.Read
+' @todo: --
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
@@ -386,10 +385,10 @@ Public Function GetRoleById(ByVal roleID As Long) As RoleInfo
     GetRoleById = r
 End Function
 
-' ================================================================
-' Чтение роли по имени
-' ================================================================
 Public Function GetRoleByName(ByVal RoleName As String) As RoleInfo
+' @desc: Чтение роли по имени
+' @role: Query.Read
+' @todo: --
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
@@ -420,10 +419,10 @@ Public Function GetRoleByName(ByVal RoleName As String) As RoleInfo
     GetRoleByName = r
 End Function
 
-' ================================================================
-' Проверка прав текущего пользователя на управление пользователями
-' ================================================================
 Public Function CanUserManageUsers(ByVal actingUserId As Long) As Boolean
+' @desc: Проверка прав текущего пользователя на управление пользователями
+' @role: Security
+' @todo: --
     Dim r As RoleInfo
     Dim roleID As Long
     
@@ -434,10 +433,10 @@ Public Function CanUserManageUsers(ByVal actingUserId As Long) As Boolean
     CanUserManageUsers = (r.CanManageUsers Or r.CanManageAdmin Or r.CanEditAny Or r.CanApproveAny)
 End Function
 
-' ================================================================
-' Проверка прав текущего пользователя на управление админом
-' ================================================================
 Public Function CanUserManageAdmins(ByVal actingUserId As Long) As Boolean
+' @desc: Проверка прав текущего пользователя на управление админом
+' @role: Security
+' @todo: --
     Dim r As RoleInfo
     Dim roleID As Long
     
@@ -448,18 +447,18 @@ Public Function CanUserManageAdmins(ByVal actingUserId As Long) As Boolean
     CanUserManageAdmins = r.CanManageAdmin
 End Function
 
-' ================================================================
-' Проверка прав текущего пользователя на создание ролей
-' ================================================================
 Public Function CanUserEditRoles(ByVal actingUserId As Long) As Boolean
+' @desc: Проверка прав текущего пользователя на создание ролей
+' @role: Security
+' @todo: --
     ' Только те кто могут редактировать админов
     CanUserEditRoles = CanUserManageAdmins(actingUserId)
 End Function
 
-' ================================================================
-' Проверка прав текущего пользователя на присвоение данной роли другим пользователям
-' ================================================================
 Public Function CanUserAssignRoles(ByVal actingUserId As Long, ByVal targerRoleId As Long) As Boolean
+' @desc: Проверка прав текущего пользователя на присвоение данной роли другим пользователям
+' @role: Security
+' @todo: --
     Dim actingRole As RoleInfo
     Dim targetRole As RoleInfo
     Dim actingRoleId As Long
@@ -480,9 +479,6 @@ Public Function CanUserAssignRoles(ByVal actingUserId As Long, ByVal targerRoleI
     End If
 End Function
 
-' ================================================================
-' Создание роли
-' ================================================================
 Public Function CreateRole( _
     ByVal RoleName As String, _
     ByVal description As String, _
@@ -492,6 +488,9 @@ Public Function CreateRole( _
     ByVal CanApproveAny As Boolean, _
     ByVal CanChangeOwnPwd As Boolean, _
     ByVal actingUserId As Long) As Long
+' @desc: Безопасное создание роли
+' @role: Query.Write
+' @todo: --
 
     
     Dim ws As DAO.Workspace
@@ -553,9 +552,6 @@ EH:
     Resume CleanExit
 End Function
 
-' ================================================================
-' Обновление роли
-' ================================================================
 Public Sub UpdateRole( _
     ByVal roleID As Long, _
     ByVal newRoleName As String, _
@@ -566,6 +562,9 @@ Public Sub UpdateRole( _
     ByVal newCanApproveAny As Boolean, _
     ByVal newCanChangeOwnPwd As Boolean, _
     ByVal actingUserId As Long)
+' @desc: Безопасное обновление роли
+' @role: Query.Update
+' @todo: --
 
     
     Dim ws As DAO.Workspace
@@ -679,15 +678,15 @@ EH:
     Resume CleanExit
 End Sub
 
-' ================================================================
-' Безопасное удаление роли
-' ================================================================
 Public Sub DeleteRoleSafe(ByVal roleID As Long, ByVal actingUserId As Long)
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     Dim r As RoleInfo
     Dim cnt As Long
+' @desc: Безопасное удаление роли
+' @role: Query.Write
+' @todo: --
     
     If roleID <= 0 Then
         ShowWarning "Неверный RoleID."
@@ -747,10 +746,10 @@ EH:
     Resume CleanExit
 End Sub
 
-' ================================================================
-' Получение роли по имени запросом
-' ================================================================
 Public Function GetRoleIdByName(ByVal RoleName As String) As Long
+' @desc: Получение роли по имени запросом
+' @role: Query.Write
+' @todo: --
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     
@@ -764,10 +763,10 @@ Public Function GetRoleIdByName(ByVal RoleName As String) As Long
     Set db = Nothing
 End Function
 
-' ================================================================
-' Создание базовых ролей при создании БД
-' ================================================================
 Public Sub InitDefaultRoles()
+' @desc: Создание базовых ролей при создании БД
+' @role: Query.Write
+' @todo: --
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
@@ -852,10 +851,10 @@ EH:
     Resume CleanExit
 End Sub
 
-' ================================================================
-' Получение данных о всех ролях
-' ================================================================
 Public Function GetAllRoles() As DAO.Recordset
+' @desc: Получение данных о всех ролях
+' @role: Query.Read
+' @todo: --
     Dim db As DAO.Database
     Dim sql As String
     
