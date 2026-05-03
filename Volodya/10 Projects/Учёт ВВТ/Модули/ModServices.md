@@ -367,10 +367,10 @@ Private Const FLDUSERID As String = "UserID"
 Private Const FLDCANEDIT As String = "CanEdit"
 Private Const FLDCANAPPROVE As String = "CanApprove"
 
-Private Sub ValidateServiceInput(ByVal serviceName As String, ByVal 
+Private Sub ValidateServiceInput(ByVal serviceName As String, ByVal serviceCode As String)
 ' @desc: Проверяет правильность ввода службы
-' @role: **какое место она занимает в системе**
-' @todo: **заметка по процедуре/функции**serviceCode As String)
+' @role: Validate
+' @todo: --
     serviceName = Trim$(serviceName)
     serviceCode = Trim$(serviceCode)
     
