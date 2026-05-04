@@ -25,6 +25,7 @@
     "TQ_show_toolbar": "checkbox",
     "TQ_show_tree": "checkbox",
     "TQ_show_urgency": "checkbox",
-    "related_skills": "text"
+    "related_skills": "text",
+    "author": "multitext"
   }
 }
