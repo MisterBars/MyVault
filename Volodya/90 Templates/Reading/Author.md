@@ -6,6 +6,7 @@ died:
 genres: []
 tags:
   - author
+cover:
 aliases: []
 ---
 

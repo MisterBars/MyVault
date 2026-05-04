@@ -73,12 +73,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "90 Templates/Reading/Book.md",
-                "mode": "source",
+                "file": "20 Areas/Reading/Authors/Сергей Сергеевич Слюсаренко.md",
+                "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Book"
+              "title": "Сергей Сергеевич Слюсаренко"
             }
           }
         ],
@@ -292,14 +292,14 @@
       "periodic-notes:Open today": false
     }
   },
-  "active": "639a5a5b07aa4ec2",
+  "active": "ce16bcb40b36e167",
   "lastOpenFiles": [
-    "20 Areas/Reading/Books/Кубатура сферы.md",
+    "90 Templates/Reading/Author.md",
     "90 Templates/Reading/Book.md",
+    "20 Areas/Reading/Books/Кубатура сферы.md",
     "20 Areas/Reading/Authors/Тест.md",
     "20 Areas/Reading/Authors/Сергей Сергеевич Слюсаренко.md",
     "20 Areas/Reading/Books/Константа связи.md",
-    "90 Templates/Reading/Author.md",
     "20 Areas/Reading/Reading Dashboard.md",
     "20 Areas/Reading/Books/Красный сигнал.md",
     "01 Dashboard/Персонаж.md",
