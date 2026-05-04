@@ -1,9 +1,29 @@
 ```dataviewjs
-const BOOK_PATH = "Volodya/20 Areas/Reading/Books";
+const root = dv.el("div", "", { cls: "reading-dashboard-root" });
+
+function clear(el) {
+  while (el.firstChild) el.removeChild(el.firstChild);
+}
 
 function safeNum(v, def = 0) {
   const n = Number(v);
   return Number.isFinite(n) ? n : def;
+}
+
+function fmt(v, empty = "—") {
+  if (v == null || v === "") return empty;
+  if (Array.isArray(v)) return v.length ? v.join(", ") : empty;
+  return String(v);
+}
+
+function fmtDate(v, empty = "—") {
+  if (v == null || v === "") return empty;
+  try {
+    const d = dv.date(v);
+    return d ? d.toFormat("dd.MM.yyyy") : empty;
+  } catch (e) {
+    return empty;
+  }
 }
 
 function calcProgress(b) {
@@ -29,14 +49,114 @@ function stars(r) {
   return n > 0 ? "★".repeat(Math.max(0, Math.min(5, n))) : "";
 }
 
-const books = dv.pages(`"${BOOK_PATH}"`)
-  .where(b => b.type === "book")
+function statusLabel(status) {
+  const map = {
+    planned: "Запланировано",
+    reading: "Читаю",
+    done: "Прочитано",
+    dropped: "Отложено"
+  };
+  return map[status] || status || "—";
+}
+
+function make(tag, parent, text = "", style = "") {
+  const el = document.createElement(tag);
+  if (text !== null && text !== undefined && text !== "") el.textContent = text;
+  if (style) el.style.cssText = style;
+  if (parent) parent.appendChild(el);
+  return el;
+}
+
+function renderCellContent(td, value) {
+  if (value instanceof HTMLElement) {
+    td.appendChild(value);
+  } else {
+    td.textContent = value == null || value === "" ? "—" : String(value);
+  }
+}
+
+function fileLinkEl(book) {
+  const a = document.createElement("a");
+  a.textContent = book.title;
+  a.href = book.file.path;
+  a.className = "internal-link";
+  a.dataset.href = book.file.path;
+  a.setAttribute("target", "_blank");
+  a.setAttribute("rel", "noopener noreferrer");
+  return a;
+}
+
+function renderHTMLTable(parent, headers, rows) {
+  const wrap = make("div", parent, "", `
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 14px;
+    background: var(--background-secondary);
+  `);
+
+  const table = make("table", wrap, "", `
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 760px;
+  `);
+
+  const thead = make("thead", table);
+  const trHead = make("tr", thead);
+
+  headers.forEach(h => {
+    const th = make("th", trHead, h, `
+      text-align: left;
+      padding: 12px 14px;
+      font-size: 0.9em;
+      color: #82aaff;
+      border-bottom: 1px solid var(--background-modifier-border);
+      background: color-mix(in srgb, var(--background-secondary) 85%, black 15%);
+      white-space: nowrap;
+    `);
+  });
+
+  const tbody = make("tbody", table);
+
+  if (!rows.length) {
+    const tr = make("tr", tbody);
+    const td = make("td", tr, "Нет данных", `
+      padding: 14px;
+      color: var(--text-muted);
+    `);
+    td.colSpan = headers.length;
+    return;
+  }
+
+  rows.forEach((row, idx) => {
+    const tr = make("tr", tbody, "", `
+      border-bottom: ${idx === rows.length - 1 ? "none" : "1px solid var(--background-modifier-border)"};
+    `);
+
+    row.forEach(cell => {
+      const td = make("td", tr, "", `
+        padding: 12px 14px;
+        vertical-align: top;
+        color: var(--text-normal);
+      `);
+      renderCellContent(td, cell);
+    });
+  });
+}
+
+const allBooks = dv.pages()
+  .where(b =>
+    b.type === "book" &&
+    !b.file.path.includes("90 Templates") &&
+    !b.file.path.includes("40 Archives")
+  )
   .map(b => ({
     file: b.file,
     title: b.file.name,
-    author: b.author ?? "",
+    author: b.author ?? "—",
+    authorKey: b.author?.path || String(b.author || "Без автора"),
     status: String(b.status || "planned"),
-    genres: Array.isArray(b.genres) ? b.genres : (b.genres ? [b.genres] : []),
+    genres: Array.isArray(b.genres) ? b.genres.map(x => String(x)) : (b.genres ? [String(b.genres)] : []),
     pages: safeNum(b.pages),
     current_page: safeNum(b.current_page),
     progress: calcProgress(b),
@@ -44,132 +164,453 @@ const books = dv.pages(`"${BOOK_PATH}"`)
     rating: safeNum(b.rating),
     favorite: !!b.favorite,
     start_date: b.start_date,
-    done_date: b.done_date
+    done_date: b.done_date,
+    cover: b.cover ? String(b.cover).trim() : ""
   }))
   .array();
 
-dv.header(2, "Сводка");
+const uniqueGenres = [...new Set(allBooks.flatMap(b => b.genres).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ru"));
+const uniqueAuthors = [...new Set(allBooks.map(b => b.authorKey))].map(key => {
+  const found = allBooks.find(b => b.authorKey === key);
+  return { key, label: found?.author || "Без автора" };
+}).sort((a, b) => String(a.label).localeCompare(String(b.label), "ru"));
 
-const totalBooks = books.length;
-const doneBooks = books.filter(b => b.status === "done").length;
-const readingBooks = books.filter(b => b.status === "reading").length;
-const plannedBooks = books.filter(b => b.status === "planned").length;
-const totalXP = books.reduce((s, b) => s + (b.status === "done" ? b.xp : 0), 0);
+const state = {
+  view: "summary",
+  status: "all",
+  genre: "all",
+  author: "all",
+  favorite: "all"
+};
 
-dv.table(
-  ["Показатель", "Значение"],
-  [
-    ["Всего книг", totalBooks],
-    ["Прочитано", doneBooks],
-    ["Читаю сейчас", readingBooks],
-    ["Запланировано", plannedBooks],
-    ["XP за завершённые книги", totalXP]
-  ]
-);
-
-dv.header(2, "Все книги");
-
-dv.table(
-  ["Книга", "Автор", "Статус", "Жанры", "Прогресс", "XP", "Рейтинг", "★"],
-  books
-    .sort((a, b) => {
-      if (b.favorite !== a.favorite) return Number(b.favorite) - Number(a.favorite);
-      if (b.rating !== a.rating) return b.rating - a.rating;
-      return a.title.localeCompare(b.title, "ru");
-    })
-    .map(b => [
-      b.file.link,
-      b.author,
-      b.status,
-      b.genres.join(", "),
-      b.progress + "%",
-      b.xp,
-      b.rating || "",
-      b.favorite ? "★" : ""
-    ])
-);
-
-dv.header(2, "По авторам");
-
-const byAuthor = {};
-for (const b of books) {
-  const key = b.author?.path || String(b.author || "Без автора");
-  if (!byAuthor[key]) {
-    byAuthor[key] = {
-      author: b.author || "Без автора",
-      count: 0,
-      done: 0,
-      avgRating: 0,
-      sumRating: 0,
-      totalXP: 0
-    };
-  }
-  byAuthor[key].count += 1;
-  if (b.status === "done") byAuthor[key].done += 1;
-  if (b.rating > 0) byAuthor[key].sumRating += b.rating;
-  if (b.status === "done") byAuthor[key].totalXP += b.xp;
+function getFilteredBooks() {
+  return allBooks.filter(b => {
+    if (state.status !== "all" && b.status !== state.status) return false;
+    if (state.genre !== "all" && !b.genres.includes(state.genre)) return false;
+    if (state.author !== "all" && b.authorKey !== state.author) return false;
+    if (state.favorite === "only" && !b.favorite) return false;
+    return true;
+  });
 }
 
-const authorRows = Object.values(byAuthor).map(a => {
-  const ratedBooks = books.filter(b => (b.author?.path || String(b.author || "Без автора")) === (a.author?.path || String(a.author))).filter(b => b.rating > 0).length;
-  return [
-    a.author,
-    a.count,
-    a.done,
-    ratedBooks > 0 ? (a.sumRating / ratedBooks).toFixed(2) : "",
-    a.totalXP
+function renderStatCard(parent, label, value, color = "#7bd389") {
+  const card = make("div", parent, "", `
+    background: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 14px;
+    padding: 14px;
+    min-height: 92px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  `);
+
+  make("div", card, label, `
+    color: var(--text-muted);
+    font-size: 0.9em;
+    margin-bottom: 8px;
+  `);
+
+  make("div", card, String(value), `
+    font-size: 1.65em;
+    font-weight: 700;
+    color: ${color};
+    line-height: 1.1;
+  `);
+}
+
+function renderSummary(parent, books) {
+  const totalBooks = books.length;
+  const doneBooks = books.filter(b => b.status === "done").length;
+  const readingBooks = books.filter(b => b.status === "reading").length;
+  const plannedBooks = books.filter(b => b.status === "planned").length;
+  const droppedBooks = books.filter(b => b.status === "dropped").length;
+  const totalXP = books.reduce((s, b) => s + (b.status === "done" ? b.xp : 0), 0);
+  const avgRatingBooks = books.filter(b => b.rating > 0);
+  const avgRating = avgRatingBooks.length
+    ? (avgRatingBooks.reduce((s, b) => s + b.rating, 0) / avgRatingBooks.length).toFixed(2)
+    : "—";
+
+  const grid = make("div", parent, "", `
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  `);
+
+  renderStatCard(grid, "Всего книг", totalBooks, "#7bd389");
+  renderStatCard(grid, "Прочитано", doneBooks, "#82aaff");
+  renderStatCard(grid, "Читаю сейчас", readingBooks, "#f7c46c");
+  renderStatCard(grid, "Запланировано", plannedBooks, "#c792ea");
+  renderStatCard(grid, "Отложено", droppedBooks, "#ff8b94");
+  renderStatCard(grid, "XP", totalXP, "#89ddff");
+  renderStatCard(grid, "Средний рейтинг", avgRating, "#ffd166");
+
+  make("div", parent, "Сейчас читаю", `
+    font-size: 1.05em;
+    font-weight: 700;
+    margin: 12px 0;
+    color: #82aaff;
+  `);
+
+  const current = books.filter(b => b.status === "reading").sort((a, b) => b.progress - a.progress).slice(0, 6);
+
+  if (!current.length) {
+    make("div", parent, "Нет книг со статусом reading.", `
+      color: var(--text-muted);
+      padding: 12px;
+      background: var(--background-secondary);
+      border: 1px solid var(--background-modifier-border);
+      border-radius: 12px;
+    `);
+    return;
+  }
+
+  const cards = make("div", parent, "", `
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+  `);
+
+  for (const b of current) {
+    const card = make("div", cards, "", `
+      background: var(--background-secondary);
+      border: 1px solid var(--background-modifier-border);
+      border-radius: 14px;
+      padding: 14px;
+    `);
+
+    const top = make("div", card, "", `
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    `);
+
+    const left = make("div", top);
+    left.appendChild(fileLinkEl(b));
+    left.firstChild.style.cssText = "font-weight:700;color:#7bd389;text-decoration:none;";
+    make("div", left, fmt(b.author), `font-size: 0.92em; color: var(--text-muted); margin-top: 6px;`);
+
+    make("div", top, b.progress + "%", `
+      font-weight: 700;
+      color: #f7c46c;
+      white-space: nowrap;
+    `);
+
+    const bar = make("div", card, "", `
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--background-primary);
+      border: 1px solid var(--background-modifier-border);
+      overflow: hidden;
+      margin: 10px 0;
+    `);
+
+    make("div", bar, "", `
+      width: ${b.progress}%;
+      height: 100%;
+      background: linear-gradient(90deg, #7bd389, #82aaff);
+    `);
+
+    const meta = make("div", card, "", `
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      font-size: 0.9em;
+      color: var(--text-muted);
+    `);
+
+    make("div", meta, `Страниц: ${b.pages || "—"}`);
+    make("div", meta, `Текущая: ${b.current_page || "—"}`);
+    make("div", meta, `XP: ${b.xp}`);
+    make("div", meta, `Рейтинг: ${b.rating || "—"}`);
+  }
+}
+
+function renderView(content, books) {
+  clear(content);
+
+  if (state.view === "summary") {
+    renderSummary(content, books);
+    return;
+  }
+
+  if (state.view === "all") {
+    const rows = books
+      .slice()
+      .sort((a, b) => {
+        if (b.favorite !== a.favorite) return Number(b.favorite) - Number(a.favorite);
+        if (b.rating !== a.rating) return b.rating - a.rating;
+        return a.title.localeCompare(b.title, "ru");
+      })
+      .map(b => [
+        fileLinkEl(b),
+        fmt(b.author),
+        statusLabel(b.status),
+        b.genres.length ? b.genres.join(", ") : "—",
+        b.progress + "%",
+        b.status === "done" ? b.xp : "—",
+        b.rating || "",
+        b.favorite ? "★" : ""
+      ]);
+
+    renderHTMLTable(content, ["Книга", "Автор", "Статус", "Жанры", "Прогресс", "XP", "Рейтинг", "★"], rows);
+    return;
+  }
+
+  if (state.view === "authors") {
+    const byAuthor = {};
+    for (const b of books) {
+      const key = b.authorKey;
+      if (!byAuthor[key]) {
+        byAuthor[key] = { author: b.author, count: 0, done: 0, sumRating: 0, ratedCount: 0, totalXP: 0 };
+      }
+      byAuthor[key].count += 1;
+      if (b.status === "done") byAuthor[key].done += 1;
+      if (b.rating > 0) {
+        byAuthor[key].sumRating += b.rating;
+        byAuthor[key].ratedCount += 1;
+      }
+      if (b.status === "done") byAuthor[key].totalXP += b.xp;
+    }
+
+    const rows = Object.values(byAuthor)
+      .map(a => [
+        fmt(a.author),
+        a.count,
+        a.done,
+        a.ratedCount > 0 ? (a.sumRating / a.ratedCount).toFixed(2) : "",
+        a.totalXP
+      ])
+      .sort((a, b) => b[4] - a[4] || b[2] - a[2] || String(a[0]).localeCompare(String(b[0]), "ru"));
+
+    renderHTMLTable(content, ["Автор", "Книг", "Прочитано", "Средний рейтинг", "XP"], rows);
+    return;
+  }
+
+  if (state.view === "genres") {
+    const byGenre = {};
+    for (const b of books) {
+      for (const g of b.genres) {
+        const genre = String(g).trim();
+        if (!genre) continue;
+        if (!byGenre[genre]) byGenre[genre] = { genre, count: 0, done: 0, xp: 0 };
+        byGenre[genre].count += 1;
+        if (b.status === "done") byGenre[genre].done += 1;
+        if (b.status === "done") byGenre[genre].xp += b.xp;
+      }
+    }
+
+    const rows = Object.values(byGenre)
+      .sort((a, b) => b.count - a.count || b.xp - a.xp)
+      .map(g => [g.genre, g.count, g.done, g.xp]);
+
+    renderHTMLTable(content, ["Жанр", "Книг", "Прочитано", "XP"], rows);
+    return;
+  }
+
+  if (state.view === "reading") {
+    const rows = books
+      .filter(b => b.status === "reading")
+      .sort((a, b) => b.progress - a.progress || a.title.localeCompare(b.title, "ru"))
+      .map(b => [
+        fileLinkEl(b),
+        fmt(b.author),
+        b.pages || "—",
+        b.current_page || "—",
+        b.progress + "%",
+        b.xp,
+        b.rating || ""
+      ]);
+
+    renderHTMLTable(content, ["Книга", "Автор", "Страниц", "Текущая", "Прогресс", "XP сейчас", "Рейтинг"], rows);
+    return;
+  }
+
+  if (state.view === "done") {
+    const rows = books
+      .filter(b => b.status === "done")
+      .sort((a, b) => {
+        const da = a.done_date ? dv.date(a.done_date) : null;
+        const db = b.done_date ? dv.date(b.done_date) : null;
+        if (da && db) return db.ts - da.ts;
+        if (db) return 1;
+        if (da) return -1;
+        return 0;
+      })
+      .map(b => [
+        fileLinkEl(b),
+        fmt(b.author),
+        fmtDate(b.done_date),
+        b.pages || "—",
+        b.xp,
+        b.rating || "",
+        stars(b.rating),
+        b.favorite ? "★" : ""
+      ]);
+
+    renderHTMLTable(content, ["Книга", "Автор", "Завершена", "Страниц", "XP", "Рейтинг", "★", "Избранное"], rows);
+    return;
+  }
+}
+
+function renderDashboard() {
+  clear(root);
+
+  const shell = make("div", root, "", `
+    background: var(--background-primary-alt, var(--background-primary));
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 18px;
+    padding: 16px;
+  `);
+
+  make("div", shell, "Reading Dashboard", `
+    font-size: 1.3em;
+    font-weight: 800;
+    color: #7bd389;
+    margin-bottom: 14px;
+  `);
+
+  const tabBar = make("div", shell, "", `
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  `);
+
+  const views = [
+    ["summary", "Сводка"],
+    ["all", "Все книги"],
+    ["authors", "Авторы"],
+    ["genres", "Жанры"],
+    ["reading", "Читаю сейчас"],
+    ["done", "Прочитанные"]
   ];
-}).sort((a, b) => b - a);[4]
 
-dv.table(
-  ["Автор", "Книг", "Прочитано", "Средний рейтинг", "XP"],
-  authorRows
-);
+  for (const [key, label] of views) {
+    const btn = make("button", tabBar, label, `
+      border: 1px solid var(--background-modifier-border);
+      background: ${state.view === key ? "linear-gradient(90deg, #7bd389, #82aaff)" : "var(--background-secondary)"};
+      color: ${state.view === key ? "#111" : "var(--text-normal)"};
+      border-radius: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-weight: 600;
+    `);
 
-dv.header(2, "По жанрам");
-
-const byGenre = {};
-for (const b of books) {
-  for (const g of b.genres) {
-    if (!byGenre[g]) byGenre[g] = { genre: g, count: 0, done: 0, xp: 0 };
-    byGenre[g].count += 1;
-    if (b.status === "done") byGenre[g].done += 1;
-    if (b.status === "done") byGenre[g].xp += b.xp;
+    btn.addEventListener("click", () => {
+      state.view = key;
+      renderDashboard();
+    });
   }
+
+  const filters = make("div", shell, "", `
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  `);
+
+  function addSelect(labelText, value, options, onChange) {
+    const wrap = make("div", filters, "", `
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    `);
+
+    make("label", wrap, labelText, `
+      font-size: 0.9em;
+      color: var(--text-muted);
+    `);
+
+    const sel = make("select", wrap, "", `
+      background: var(--background-secondary);
+      color: var(--text-normal);
+      border: 1px solid var(--background-modifier-border);
+      border-radius: 10px;
+      padding: 8px 10px;
+    `);
+
+    for (const opt of options) {
+      const o = document.createElement("option");
+      o.value = opt.value;
+      o.textContent = opt.label;
+      if (opt.value === value) o.selected = true;
+      sel.appendChild(o);
+    }
+
+    sel.addEventListener("change", e => {
+      onChange(e.target.value);
+      renderDashboard();
+    });
+  }
+
+  addSelect("Статус", state.status, [
+    { value: "all", label: "Все" },
+    { value: "planned", label: "Запланировано" },
+    { value: "reading", label: "Читаю" },
+    { value: "done", label: "Прочитано" },
+    { value: "dropped", label: "Отложено" }
+  ], v => state.status = v);
+
+  addSelect("Жанр", state.genre, [
+    { value: "all", label: "Все" },
+    ...uniqueGenres.map(g => ({ value: g, label: g }))
+  ], v => state.genre = v);
+
+  addSelect("Автор", state.author, [
+    { value: "all", label: "Все" },
+    ...uniqueAuthors.map(a => ({ value: a.key, label: String(a.label) }))
+  ], v => state.author = v);
+
+  addSelect("Избранное", state.favorite, [
+    { value: "all", label: "Все" },
+    { value: "only", label: "Только избранное" }
+  ], v => state.favorite = v);
+
+  const actions = make("div", shell, "", `
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  `);
+
+  const filteredBooks = getFilteredBooks();
+
+  make("div", actions, `Найдено книг: ${filteredBooks.length}`, `
+    color: var(--text-muted);
+    font-size: 0.92em;
+  `);
+
+  const resetBtn = make("button", actions, "Сбросить фильтры", `
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-secondary);
+    color: var(--text-normal);
+    border-radius: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: 600;
+  `);
+
+  resetBtn.addEventListener("click", () => {
+    state.status = "all";
+    state.genre = "all";
+    state.author = "all";
+    state.favorite = "all";
+    renderDashboard();
+  });
+
+  const content = make("div", shell, "", `width: 100%;`);
+  renderView(content, filteredBooks);
 }
 
-dv.table(
-  ["Жанр", "Книг", "Прочитано", "XP"],
-  Object.values(byGenre)
-    .sort((a, b) => b.count - a.count)
-    .map(g => [g.genre, g.count, g.done, g.xp])
-);
-
-dv.header(2, "Читаю сейчас");
-
-dv.table(
-  ["Книга", "Автор", "Страниц", "Текущая", "Прогресс", "XP сейчас"],
-  books
-    .filter(b => b.status === "reading")
-    .sort((a, b) => b.progress - a.progress)
-    .map(b => [
-      b.file.link,
-      b.author,
-      b.pages,
-      b.current_page,
-      b.progress + "%",
-      b.xp
-    ])
-);
+renderDashboard();
 ```
 
-## Прочитанные книги
-```dataview
-TABLE author AS "Автор", genres AS "Жанры", rating AS "Рейтинг", done_date AS "Прочитано"
-FROM "Volodya/20 Area/Reading/Books"
-WHERE type = "book" AND status = "done"
-SORT done_date DESC
-```
 # Инструкция по заполнению карточек книг и авторов
 
 Ниже описано, какие поля заполнять в карточках `book` и `author`, какие из них обязательные, а какие дополнительные.
@@ -400,6 +841,9 @@ aliases: []
 ### `finish_bonus`
 - Обычно можно держать `30`
 - Для очень значимых или сложных книг можно поднять до `50`
+
+Также если необходимо указать опыт в других навыках, то указываем из в конце карточки в формате #skill/навык/03 где 03 - 30 % опыта от книги добавить к навыку.
+Если нужна связь для глафа, то в блоке связей указываем ссылку на навык.
 
 ---
 
