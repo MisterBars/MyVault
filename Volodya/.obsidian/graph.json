@@ -20,6 +20,13 @@
         "a": 1,
         "rgb": 6021202
       }
+    },
+    {
+      "query": "Reading",
+      "color": {
+        "a": 1,
+        "rgb": 11657298
+      }
     }
   ],
   "collapse-display": false,
