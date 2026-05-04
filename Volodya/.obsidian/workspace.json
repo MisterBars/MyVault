@@ -73,16 +73,15 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10 Projects/Учёт ВВТ/Модули/ModCreateDB.md",
+                "file": "90 Templates/Reading/Book.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "ModCreateDB"
+              "title": "Book"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -292,12 +291,20 @@
       "periodic-notes:Open today": false
     }
   },
-  "active": "20678d6aef89d523",
+  "active": "9201b4f177e38303",
   "lastOpenFiles": [
-    "10 Projects/Учёт ВВТ/Учёт ВВТ.md",
+    "90 Templates/Reading/Book.md",
+    "90 Templates/Reading/Author.md",
     "10 Projects/Учёт ВВТ/Модули/ModCreateDB.md",
-    "Новая папка",
+    "90 Templates/Reading",
+    "02 Profile/Skills/Reading.md",
+    "02 Profile/Skills/Python.md",
     "01 Dashboard/Персонаж.md",
+    "20 Areas/Reading/Authors",
+    "20 Areas/Reading/Books",
+    "20 Areas/Reading",
+    "10 Projects/Учёт ВВТ/Учёт ВВТ.md",
+    "Новая папка",
     "30 Resources/VBA/Role sub or function.md",
     "10 Projects/Учёт ВВТ/Модули/ModServices.md",
     "90 Templates/VBA/Таблица Access.md",
@@ -317,18 +324,10 @@
     "90 Templates/VBA/Модуль.md",
     "10 Projects/Учёт ВВТ/Модули/ThisWorkbook.md",
     "10 Projects/Учёт ВВТ/Модули/ModUsers.md",
-    "10 Projects/Учёт ВВТ/Модули/ModTransfers.md",
-    "10 Projects/Учёт ВВТ/Модули/ModSettings.md",
-    "10 Projects/Учёт ВВТ/Модули/ModSession.md",
-    "10 Projects/Учёт ВВТ/Модули/ModServiceUsersBuffer.md",
     "textgenerator/templates/trash/awesomePrompts",
     "textgenerator/templates/trash",
     "textgenerator/templates/tts",
     "textgenerator/templates/awesomePrompts",
-    "textgenerator/templates",
-    "textgenerator",
-    "30 Resources/Python/Snippets",
-    "30 Resources/Snippets",
-    "30 Resources/AI"
+    "textgenerator/templates"
   ]
 }
