@@ -43,6 +43,16 @@ function fmt(v, empty = "—") {
   return String(v);
 }
 
+function fmtDate(v, empty = "—") {
+  if (v == null || v === "") return empty;
+  try {
+    const d = dv.date(v);
+    return d ? d.toFormat("dd.MM.yyyy") : empty;
+  } catch (e) {
+    return String(v);
+  }
+}
+
 function calcProgress(book) {
   const pages = num(book.pages);
   const current = Math.min(num(book.current_page), pages);
@@ -53,7 +63,6 @@ function calcProgress(book) {
 function calcXP(book) {
   const pages = num(book.pages);
   if (pages <= 0) return 0;
-
   const current = Math.min(num(book.current_page), pages);
   const progress = current / pages;
   const baseXP = 100;
@@ -62,12 +71,28 @@ function calcXP(book) {
   const finishBonus = String(book.status || "") === "done"
     ? num(book.finish_bonus, 0)
     : 0;
-
   return Math.round(progress * baseXP * sizeCoef * difficultyCoef + finishBonus);
 }
 
 const progress = calcProgress(b);
 const xp = calcXP(b);
+
+// Обложка (если есть поле cover)
+if (b.cover && String(b.cover).trim()) {
+  const coverWrap = dv.el("div", "", {});
+  coverWrap.style.cssText = "text-align:center;margin-bottom:16px;";
+  
+  const img = document.createElement("img");
+  img.src = String(b.cover).trim();
+  img.alt = b.file.name || "Обложка книги";
+  img.style.cssText = "max-width:300px;max-height:400px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);";
+  
+  img.onerror = () => {
+    img.style.display = "none";
+  };
+  
+  coverWrap.appendChild(img);
+}
 
 dv.header(3, "Паспорт");
 dv.table(
@@ -89,8 +114,8 @@ dv.table(
   ["Поле", "Значение"],
   [
     ["Статус", fmt(b.status)],
-    ["Начал", fmt(b.start_date)],
-    ["Закончил", fmt(b.done_date)],
+    ["Начал", fmtDate(b.start_date)],
+    ["Закончил", fmtDate(b.done_date)],
     ["Страниц", fmt(b.pages)],
     ["Текущая страница", fmt(b.current_page)],
     ["Прогресс", progress + "%"],
@@ -109,7 +134,7 @@ dv.table(
 ```
 
 ## О чём книга
-Кратко своими словами.
+<p align="justify">Кратко своими словами.</p>
 
 ## Зачем читаю
 Почему выбрал книгу и что хочу из неё получить.
@@ -129,4 +154,6 @@ dv.table(
 ## Связи
 - Похожие книги:
 - Связанные темы:
-- Навык: [[Reading]]
+- Смежные навыки:
+## Теги смежных навыков
+- 

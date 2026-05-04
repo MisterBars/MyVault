@@ -1,5 +1,5 @@
 ```dataviewjs
-const BOOK_PATH = "Volodya/20 Area/Reading/Books";
+const BOOK_PATH = "Volodya/20 Areas/Reading/Books";
 
 function safeNum(v, def = 0) {
   const n = Number(v);

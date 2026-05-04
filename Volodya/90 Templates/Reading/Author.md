@@ -82,3 +82,5 @@ SORT done_date DESC
 
 ## Похожие авторы
 - 
+## Связь
+- Навык: [[Reading]]
