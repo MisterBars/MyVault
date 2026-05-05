@@ -87,12 +87,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10 Projects/Учёт ВВТ/Формы/F_Menu.md",
+                "file": "10 Projects/Учёт ВВТ/Формы/F_Auth.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "F_Menu"
+              "title": "F_Auth"
             }
           }
         ],
@@ -308,6 +308,7 @@
   },
   "active": "3e77cf739225f256",
   "lastOpenFiles": [
+    "10 Projects/Учёт ВВТ/Формы/F_Menu.md",
     "10 Projects/Учёт ВВТ/Формы/F_ListsDB.md",
     "10 Projects/Учёт ВВТ/Формы/F_ChangeDB.md",
     "10 Projects/Учёт ВВТ/Формы/F_Change.md",
@@ -333,7 +334,6 @@
     "20 Areas/Reading/Authors/Сергей Сергеевич Слюсаренко.md",
     "90 Templates/Reading/Author.md",
     "90 Templates/Reading/Book.md",
-    "20 Areas/Reading/Books/Кубатура сферы.md",
     "90 Templates/Reading",
     "20 Areas/Reading/Authors",
     "20 Areas/Reading/Books",
