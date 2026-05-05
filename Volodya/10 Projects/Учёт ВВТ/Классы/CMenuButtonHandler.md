@@ -310,14 +310,15 @@ Private Sub Btn_Click()
             SessionShutdown
             Unload F_Menu
     End Select
-    Load F_ListsDB
-    F_ListsDB.PrepareForm
-    F_ListsDB.Show vbModal
+    If actionKey <> "logout" Then
+        Load F_ListsDB
+        F_ListsDB.PrepareForm
+        F_ListsDB.Show vbModal
+    End If
     Exit Sub
 EH:
     ShowError "CMenuButtonHandler.Btn_Click", Err.Number, Err.description, "ActionKey=" & actionKey
 End Sub
-
 ```
 
 ## Черновые заметки

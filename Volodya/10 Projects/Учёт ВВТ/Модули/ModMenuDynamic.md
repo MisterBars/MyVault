@@ -334,35 +334,55 @@ if (rows.length === 0) {
 
 Option Explicit
 
-'public const
+Public Const MENU_AUTHORIZED    As String = "authorized"
+Public Const MENU_ROLES         As String = "menu_roles"
+Public Const MENU_USERS         As String = "menu_users"
+Public Const MENU_NOMTYPES      As String = "menu_nomtypes"
+Public Const MENU_NOMENCLATURE  As String = "menu_nom"
+Public Const MENU_SERVICES      As String = "menu_services"
 
 
 Public Function GetCurrentRoleInfo() As RoleInfo
 ' @desc: Получение инфы роли активного пользователя
 ' @role: Query.Read
 ' @todo: --
+    On Error GoTo EH
     If g_CurrentRoleID > 0 Then
         GetCurrentRoleInfo = GetRoleById(g_CurrentRoleID)
     ElseIf g_CurrentUserID > 0 Then
         GetCurrentRoleInfo = GetRoleById(GetUserRoleId(g_CurrentUserID))
     End If
+    Exit Function
+EH:
+    ShowError "GetCurrentRoleInfo", Err.Number, Err.description
 End Function
 
 Public Function HasMenuPermission(rInfo As RoleInfo, ByVal permissionKey As String) As Boolean
 ' @desc: Проверка доступности кнопок меню
 ' @role: Security
-' @todo: Переделать логику доступности
+' @todo: --
+
     Select Case LCase$(Trim$(permissionKey))
-        Case "", "authorized":
+        Case "", MENU_AUTHORIZED:
+            HasMenuPermission = True
+        Case MENU_ROLES:
+            HasMenuPermission = rInfo.CanManageUsers
+        Case MENU_USERS:
+            HasMenuPermission = (rInfo.CanManageUsers Or rInfo.CanManageAdmin)
+        Case MENU_NOMTYPES:
+            HasMenuPermission = (rInfo.CanEditAny Or rInfo.CanManageAdmin)
+        Case MENU_NOMENCLATURE:
+            HasMenuPermission = True
+        Case MENU_SERVICES:
             HasMenuPermission = True
         Case "canmanageusers":
             HasMenuPermission = (rInfo.CanManageUsers Or rInfo.CanManageAdmin)
         Case "canmanageadmin":
             HasMenuPermission = rInfo.CanManageAdmin
         Case "caneditany":
-            HasMenuPermission = rInfo.CanEditAny
+            HasMenuPermission = (rInfo.CanEditAny Or rInfo.CanManageAdmin)
         Case "canapproveany":
-            HasMenuPermission = rInfo.CanApproveAny
+            HasMenuPermission = (rInfo.CanApproveAny Or rInfo.CanManageAdmin)
     End Select
 End Function
 
@@ -371,12 +391,12 @@ Public Function GetMenuItems() As Variant
 ' @role: UI
 ' @todo: --
     GetMenuItems = Array( _
-        Array("Роли", "roles", "CanManageAdmin", 10), _
-        Array("Пользователи", "users", "CanManageUsers", 20), _
-        Array("Типы номенклатур", "nomtypes", "CanEditAny", 30), _
-        Array("Номенклатура", "nom", "CanEditAny", 40), _
-        Array("Службы", "services", "CanManageUsers", 50), _
-        Array("Выход из аккаунта", "logout", "authorized", 1000) _
+        Array("Роли", "roles", MENU_ROLES, 10), _
+        Array("Пользователи", "users", MENU_USERS, 20), _
+        Array("Типы номенклатур", "nomtypes", MENU_NOMTYPES, 30), _
+        Array("Номенклатура", "nom", MENU_NOMENCLATURE, 40), _
+        Array("Службы", "services", MENU_SERVICES, 50), _
+        Array("Выход из аккаунта", "logout", MENU_AUTHORIZED, 1000) _
     )
 End Function
 
