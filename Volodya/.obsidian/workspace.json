@@ -96,7 +96,7 @@
             }
           }
         ],
-        "currentTab": 4
+        "currentTab": 5
       }
     ],
     "direction": "vertical"
@@ -306,8 +306,9 @@
       "periodic-notes:Open today": false
     }
   },
-  "active": "ca2157413cdeca8c",
+  "active": "3ffc37fa8c6fab42",
   "lastOpenFiles": [
+    "20 Areas/Reading/Reading Dashboard.md",
     "20 Areas/Reading/Authors/Марк Геннадьевич Кузьмин.md",
     "90 Templates/Reading/Author.md",
     "20 Areas/Reading/Books/Играть, чтобы жить. Книга 9. Дорога домой.md",
@@ -320,7 +321,6 @@
     "20 Areas/Reading/Books/Играть, чтобы жить. Книга 2. Клан.md",
     "20 Areas/Reading/Books/Играть, чтобы жить. Книга 1. Срыв.md",
     "01 Dashboard/Персонаж.md",
-    "20 Areas/Reading/Reading Dashboard.md",
     "20 Areas/Reading/Authors/Рус Дмитрий.md",
     "20 Areas/Reading/Books/Коллективное сознательное.md",
     "10 Projects/Учёт ВВТ/Модули/ModDictionaries.md",
