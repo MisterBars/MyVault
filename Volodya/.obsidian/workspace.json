@@ -87,16 +87,15 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "20 Areas/Reading/Books/Часодеи. Часовой ключ.md",
+                "file": "20 Areas/Reading/Books/Часодеи. Часовая битва.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Часодеи. Часовой ключ"
+              "title": "Часодеи. Часовая битва"
             }
           }
-        ],
-        "currentTab": 5
+        ]
       }
     ],
     "direction": "vertical"
@@ -306,10 +305,16 @@
       "periodic-notes:Open today": false
     }
   },
-  "active": "3ffc37fa8c6fab42",
+  "active": "9201b4f177e38303",
   "lastOpenFiles": [
-    "20 Areas/Reading/Authors/Наталья Васильевна Щерба.md",
+    "20 Areas/Reading/Books/Часодеи. Часовая битва.md",
+    "20 Areas/Reading/Books/Часодеи. Часограмма.md",
     "20 Areas/Reading/Books/Часодеи. Часовой ключ.md",
+    "20 Areas/Reading/Books/Часодеи. Часовое сердце.md",
+    "20 Areas/Reading/Books/Часодеи. Часовое имя.md",
+    "20 Areas/Reading/Books/Часодеи. Часовая башня.md",
+    "20 Areas/Reading/Reading Dashboard.md",
+    "20 Areas/Reading/Authors/Наталья Васильевна Щерба.md",
     "20 Areas/Reading/Books/Путь Шамана. Всё только начинается.md",
     "20 Areas/Reading/Books/Путь Шамана. Поиск Создателя.md",
     "20 Areas/Reading/Books/Путь Шамана. Гамбит Картоса.md",
@@ -328,12 +333,6 @@
     "20 Areas/Reading/Books/Скидбладнир. Золото и чешуя.md",
     "20 Areas/Reading/Books/Скидбладнир. Дорога во Мрак.md",
     "20 Areas/Reading/Books/Скидбладнир. Тени великих.md",
-    "20 Areas/Reading/Books/Скидбладнир. Пути богов.md",
-    "20 Areas/Reading/Books/Скидбладнир. Осколки Забытой эпохи.md",
-    "20 Areas/Reading/Books/Скидбладнир. Кровь и жизнь.md",
-    "20 Areas/Reading/Books/Играть, чтобы жить. Книга 8. Путь молодого бога.md",
-    "20 Areas/Reading/Reading Dashboard.md",
-    "20 Areas/Reading/Books/Играть, чтобы жить. Книга 9. Дорога домой.md",
     "10 Projects/Учёт ВВТ/Таблицы БД",
     "20 Areas/Разработка/Учёт ВВТ/F_Change-1777997947304.webp",
     "20 Areas/Разработка/Учёт ВВТ/F_Change-1777998028877.webp",
