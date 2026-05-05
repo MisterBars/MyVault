@@ -6,7 +6,6 @@ table_name: TableName
 table_order: 1
 domain: "Название домена"
 db_engine: "Название СУБД"
-source_of_truth: "ссылка"
 tags:
   - db
   - table
