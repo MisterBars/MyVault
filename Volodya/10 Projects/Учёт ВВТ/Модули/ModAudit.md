@@ -1,6 +1,6 @@
 ---
 type: module
-status: done
+status: in-progress
 done_date: 2026-05-02
 project: "[[Учёт ВВТ]]"
 skill: vba

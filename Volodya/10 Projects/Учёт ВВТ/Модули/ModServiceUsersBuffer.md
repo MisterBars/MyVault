@@ -338,17 +338,30 @@ Option Explicit
 
 Private mItems As Collection
 
+' --- ИНИЦИАЛИЗАЦИЯ И СОСТОЯНИЕ ---
+
 Public Sub SvcBuf_Init()
+' @desc: Создаёт новый пустой экземпляр коллекции mItems. Сбрасывает любое предыдущее состояние буфера. 
+' @role: Точка входа перед любой загрузкой данных в буфер. Вызывается из SvcBufLoadFromServiceRecordset и SvcBufLoadForNewService. 
+' @todo: Нет. Вызов корректен, Collection не требует явного размера.
     Set mItems = New Collection
 End Sub
 
 Public Sub SvcBuf_Clear()
+' @desc: Уничтожает коллекцию mItems (Set mItems = Nothing). Буфер после этого недоступен до следующего SvcBufInit. 
+' @role: Явная очистка при закрытии формы или отмене операции. 
+' @todo: Рекомендуется вызывать в UserForm_Terminate / BtnCanselClick чтобы не держать Scripting.Dictionary объекты в памяти.
     Set mItems = Nothing
 End Sub
 
 Public Function SvcBuf_IsReady() As Boolean
+' @desc: Возвращает True, если буфер инициализирован (mItems не Nothing). 
+' @role: Guard-проверка перед любым обращением к буферу. Позволяет избежать ошибки при вызове методов на неинициализированном буфере. 
+' @todo: Использовать как первую проверку в процедурах, работающих с буфером.
     SvcBuf_IsReady = Not mItems Is Nothing
 End Function
+
+' --- ВНУТРЕННИЕ ХЕЛПЕРЫ ---
 
 Private Function NewUserState( _
     ByVal userID As Long, _
@@ -358,6 +371,9 @@ Private Function NewUserState( _
     ByVal hasDbLink As Boolean, _
     ByVal canEdit As Boolean, _
     ByVal canApprove As Boolean) As Object
+    ' @desc: Создаёт и возвращает Scripting.Dictionary с полями одной записи пользователя: UserID, Login, FullName, RightsByRole, HasDbLink, PendingDelete (всегда False при создании), CanEdit, CanApprove. 
+    ' @role: Фабричная функция-конструктор для элемента коллекции mItems. Единственное место, где задаётся структура "строки" буфера. 
+    ' @todo: Если в будущем появятся новые поля состояния — добавлять только здесь. Рассмотреть замену Dictionary на Class-модуль для строгой типизации.
 
     Dim d As Object
     Set d = CreateObject("Scripting.Dictionary")
@@ -375,10 +391,18 @@ Private Function NewUserState( _
 End Function
 
 Private Function SvcBuf_Key(ByVal userID As Long) As String
+' @desc: Формирует строковый ключ для коллекции в формате "U<userID>". Например: userID=5 → "U5". 
+' @role: Единое место формирования ключа; исключает разночтение формата при добавлении, поиске и удалении из коллекции. 
+' @todo: Нет. Формат простой и достаточный.
     SvcBuf_Key = "U" & CStr(userID)
 End Function
 
+' --- ДОСТУП К ЭЛЕМЕНТАМ ---
+
 Public Function SvcBuf_Exists(ByVal userID As Long) As Boolean
+' @desc: Проверяет наличие пользователя с указанным userID в буфере. Использует On Error Resume Next для безопасного обращения к коллекции. 
+' @role: Используется перед SvcBufGet и SvcBufAddOrReplace для условных проверок. 
+' @todo: Нет. Паттерн с On Error Resume Next — стандартный для VBA Collection lookup.
     Dim obj As Object
     On Error Resume Next
     Set obj = mItems(SvcBuf_Key(userID))
@@ -388,10 +412,14 @@ Public Function SvcBuf_Exists(ByVal userID As Long) As Boolean
 End Function
 
 Public Function SvcBuf_Get(ByVal userID As Long) As Object
+' @desc: Проверяет наличие пользователя с указанным userID в буфере. Использует On Error Resume Next для безопасного обращения к коллекции. 
+' @role: Используется перед SvcBufGet и SvcBufAddOrReplace для условных проверок. 
+' @todo: Нет. Паттерн с On Error Resume Next — стандартный для VBA Collection lookup.
     On Error Resume Next
     Set SvcBuf_Get = mItems(SvcBuf_Key(userID))
     On Error GoTo 0
 End Function
+
 
 Public Sub SvcBuf_AddOrReplace( _
     ByVal userID As Long, _
@@ -401,6 +429,9 @@ Public Sub SvcBuf_AddOrReplace( _
     ByVal hasDbLink As Boolean, _
     ByVal canEdit As Boolean, _
     ByVal canApprove As Boolean)
+    ' @desc: Добавляет нового пользователя в буфер или заменяет существующего. При замене сначала удаляет старый элемент коллекции, затем добавляет новый. 
+    ' @role: Единственный публичный способ записи/перезаписи элемента в буфер. Вызывается из SvcBufLoadFromServiceRecordset и SvcBufLoadForNewService, а также из SvcBufAddLink при добавлении нового пользователя вручную. 
+    ' @todo: Нет. Паттерн Remove + Add на Collection — стандартный способ upsert.
 
     Dim key As String
     Dim obj As Object
@@ -415,7 +446,12 @@ Public Sub SvcBuf_AddOrReplace( _
     mItems.Add obj, key
 End Sub
 
+' --- ЗАГРУЗКА ДАННЫХ ---
+
 Public Sub SvcBuf_LoadFromServiceRecordset(ByVal rs As DAO.Recordset)
+' @desc: Заполняет буфер из Recordset существующей службы. Ожидает поля: UserID, Login, FullName, RightsByRole, HasUserServiceLink, RoleCanEditAny, LinkCanEdit, RoleCanApproveAny, LinkCanApprove. CanEdit и CanApprove вычисляются как OR роли и явной ссылки. 
+' @role: Используется при открытии формы редактирования существующей службы (ActionBut = Change). Recordset приходит из GetUsersByService(serviceID). 
+' @todo: Проверить, что GetUsersByService возвращает все нужные поля с точными именами. При изменении запроса — синхронизировать имена полей здесь.
     Dim userID As Long
     Dim login As String
     Dim fullName As String
@@ -445,6 +481,9 @@ Public Sub SvcBuf_LoadFromServiceRecordset(ByVal rs As DAO.Recordset)
 End Sub
 
 Public Sub SvcBuf_LoadForNewService(ByVal rsAllUsers As DAO.Recordset)
+' @desc: Заполняет буфер для новой службы (ещё не сохранённой в БД). Загружает только пользователей, у которых есть права по роли (CanEditAny или CanApproveAny = True). HasDbLink = False для всех. 
+' @role: Используется при открытии формы создания новой службы (ActionBut = Add). Recordset приходит из GetUsersForNewService. 
+' @todo: Нет. Логика фильтрации по rightsByRole корректна.
     Dim userID As Long
     Dim login As String
     Dim fullName As String
@@ -474,7 +513,12 @@ Public Sub SvcBuf_LoadForNewService(ByVal rsAllUsers As DAO.Recordset)
     Loop
 End Sub
 
+' --- ПОДСЧЁТ И ВИДИМОСТЬ ---
+
 Public Function SvcBuf_CountVisibleAssigned() As Long
+' @desc: Считает количество пользователей в буфере, у которых PendingDelete = False. Те, кто помечен на удаление, в счёт не входят. 
+' @role: Используется в RefreshUsersByServiceList для корректного выделения памяти под массив dataArr. 
+' @todo: Нет. Логика простая и понятная.
     Dim i As Long
     Dim obj As Object
     If mItems Is Nothing Then Exit Function
@@ -488,6 +532,9 @@ Public Function SvcBuf_CountVisibleAssigned() As Long
 End Function
 
 Public Function SvcBuf_CanAppearInLeftList(ByVal userID As Long) As Boolean
+' @desc: Определяет, должен ли пользователь отображаться в левом списке (LBUserWOService — "пользователи без службы"). Правила: - пользователь не в буфере → True (показать) - RightsByRole = True → False (скрыть, права по роли — всегда в правом) - PendingDelete = True → True (показать, ссылка помечена к удалению) - иначе → False (пользователь уже назначен) 
+' @role: Фильтр отображения в RefreshUsersWithoutServiceList. ' Определяет, кого можно добавить к службе вручную. 
+' @todo: Нет. Логика корректна и покрывает все случаи.
     Dim obj As Object
 
     Set obj = SvcBuf_Get(userID)
@@ -505,10 +552,15 @@ Public Function SvcBuf_CanAppearInLeftList(ByVal userID As Long) As Boolean
     End If
 End Function
 
+' --- ИЗМЕНЕНИЕ СОСТОЯНИЯ ---
+
 Public Function SvcBuf_AddLink( _
     ByVal userID As Long, _
     ByVal login As String, _
     ByVal fullName As String) As Boolean
+    ' @desc: Добавляет явную ссылку пользователя на службу в буфере. Если пользователь отсутствует — создаёт новый элемент (hasDbLink=False, права False). Если уже есть и RightsByRole = True — ничего не делает (нельзя добавить вручную). Если есть и PendingDelete = True — снимает флаг удаления (восстанавливает). Возвращает True при успехе, False если операция не применима. 
+    ' @role: Вызывается из BtnAddUSClick при клике "добавить пользователя к службе". 
+    ' @todo: Нет. Логика трёх случаев корректна.
 
     Dim obj As Object
 
@@ -527,6 +579,9 @@ Public Function SvcBuf_AddLink( _
 End Function
 
 Public Function SvcBuf_RemoveLink(ByVal userID As Long) As Boolean
+' @desc: Помечает ссылку пользователя к удалению или физически удаляет из буфера. Если пользователь не найден — ничего не делает. Если RightsByRole = True — ничего не делает (нельзя снять права роли вручную). Если HasDbLink = True — ставит PendingDelete = True (отложенное удаление в БД). Если HasDbLink = False — физически удаляет из коллекции (ещё не сохранён в БД). Возвращает True при успехе. 
+' @role: Вызывается из BtnDelUSClick при клике "убрать пользователя из службы". 
+' @todo: Нет. Разделение на мягкое/физическое удаление — правильное решение.
     Dim obj As Object
     Dim key As String
 
@@ -547,6 +602,9 @@ Public Function SvcBuf_RemoveLink(ByVal userID As Long) As Boolean
 End Function
 
 Public Function SvcBuf_ToggleEdit(ByVal userID As Long) As Boolean
+' @desc: Переключает флаг CanEdit у пользователя в буфере (True → False → True). Если пользователь не найден или RightsByRole = True — ничего не делает. Возвращает True при успехе. 
+' @role: Вызывается из BtnUSCanEditClick при клике на кнопку редактирования прав. 
+' @todo: Нет. Toggle-паттерн корректен.
     Dim obj As Object
     Set obj = SvcBuf_Get(userID)
     If obj Is Nothing Then Exit Function
@@ -557,6 +615,9 @@ Public Function SvcBuf_ToggleEdit(ByVal userID As Long) As Boolean
 End Function
 
 Public Function SvcBuf_ToggleApprove(ByVal userID As Long) As Boolean
+' @desc: Переключает флаг CanApprove у пользователя в буфере (True → False → True). Если пользователь не найден или RightsByRole = True — ничего не делает. Возвращает True при успехе. 
+' @role: Вызывается из BtnUSCanApproveClick при клике на кнопку прав согласования. 
+' @todo: Нет. Toggle-паттерн корректен.
     Dim obj As Object
     Set obj = SvcBuf_Get(userID)
     If obj Is Nothing Then Exit Function
@@ -566,11 +627,19 @@ Public Function SvcBuf_ToggleApprove(ByVal userID As Long) As Boolean
     SvcBuf_ToggleApprove = True
 End Function
 
+' --- ДОСТУП К КОЛЛЕКЦИИ И СИНХРОНИЗАЦИЯ ---
+
 Public Function SvcBuf_Items() As Collection
+' @desc: Возвращает ссылку на внутреннюю коллекцию mItems. Позволяет внешнему коду итерироваться по буферу без прямого доступа к mItems. 
+' @role: Используется в SaveServiceUsersLinks, RefreshUsersByServiceList и NormalizeServiceUsersBufferAfterSave для перебора всех элементов. 
+' @todo: Возвращает именно ссылку, не копию — внешний код теоретически может изменить коллекцию. Если станет проблемой — рассмотреть возврат копии.
     Set SvcBuf_Items = mItems
 End Function
 
 Public Sub NormalizeServiceUsersBufferAfterSave()
+' @desc: Приводит буфер к актуальному состоянию после успешного сохранения в БД. Логика: - пользователи с RightsByRole = False пропускаются - если RightsByRole = True и PendingDelete = True → удаляет из коллекции - если RightsByRole = True и PendingDelete = False → ставит HasDbLink = True, PendingDelete = False (подтверждает сохранение) 
+' @role: Вызывается сразу после SaveServiceUsersLinks чтобы синхронизировать буфер с новым состоянием БД без повторного запроса к Access. 
+' @todo: Проверить: нужно ли также сбрасывать PendingDelete у RightsByRole=False записей. Сейчас эта ветка полностью игнорируется — возможно намеренно.
     Dim items As Collection
     Dim obj As Object
     Dim toRemove As Collection
