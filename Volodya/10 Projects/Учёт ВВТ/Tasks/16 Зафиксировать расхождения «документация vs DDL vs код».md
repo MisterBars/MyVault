@@ -3,8 +3,9 @@ type: task
 status: active
 done_date:
 skill:
+  - vba
 task_type: normal
-project:
+project: "[[Учёт ВВТ]]"
 deadline:
 tags:
   - task

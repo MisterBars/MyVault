@@ -1,6 +1,6 @@
 ---
 type: db-table
-status: draft
+status: in-progress
 project: "[[Учёт ВВТ]]"
 table_name: Users
 table_order: 3
