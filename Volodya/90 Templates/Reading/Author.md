@@ -12,6 +12,72 @@ aliases: []
 
 # {{title}}
 
+```dataviewjs
+const a = dv.current();
+const cover = a.cover;
+
+function getCoverSrc(value) {
+  if (!value) return null;
+
+  try {
+    const t = dv.func.typeof(value);
+
+    if (t === "link" && value.path) {
+      const file = app.metadataCache.getFirstLinkPathDest(value.path, "");
+      if (!file) return null;
+      return app.vault.getResourcePath(file);
+    }
+
+    if (t === "string") {
+      const s = String(value).trim();
+      if (!s) return null;
+
+      if (/^https?:\/\//i.test(s)) {
+        return s;
+      }
+
+      const file = app.metadataCache.getFirstLinkPathDest(s, "");
+      if (file) {
+        return app.vault.getResourcePath(file);
+      }
+
+      return s;
+    }
+  } catch (e) {
+    return null;
+  }
+
+  return null;
+}
+
+const src = getCoverSrc(cover);
+
+if (src) {
+  const wrap = dv.el("div", "", {});
+  wrap.style.cssText = "text-align:center; margin: 0 0 16px 0;";
+
+  const img = document.createElement("img");
+  img.src = src;
+  img.alt = a.file.name || "Фото автора";
+  img.style.cssText = `
+    max-width: 220px;
+    max-height: 280px;
+    width: auto;
+    height: auto;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 1px solid var(--background-modifier-border);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+    background: var(--background-secondary);
+  `;
+
+  img.onerror = () => {
+    wrap.style.display = "none";
+  };
+
+  wrap.appendChild(img);
+}
+```
 ## Кратко
 <p align="justify">Кто это и почему вам интересен.</p>
 
