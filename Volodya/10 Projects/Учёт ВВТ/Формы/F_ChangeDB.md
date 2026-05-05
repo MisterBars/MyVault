@@ -14,9 +14,27 @@ reward_xp: 50
 ## Назначение формы
 - Кратко: для чего форма нужна, кто её пользователь (роль).
 ## Элементы интерфейса
-- Поля ввода (textbox, combobox, checkbox) и их смысл.
-- Кнопки и действия.
-- Таблицы/списки и что они показывают.
+
+| Форма | Тип элемента | Имя элемента | Caption / Text |
+| --- | --- | --- | --- |
+| F_ChangeDB | CommandButton | Btn_Cansel | Отмена |
+| F_ChangeDB | CommandButton | Btn_Save | Сохранить |
+| F_ChangeDB | CommandButton | Btn_SelLoc | Выбрать |
+| F_ChangeDB | CommandButton | Btn_SelLocDoc | Выбрать |
+| F_ChangeDB | CommandButton | Btn_SelServ | Выбрать |
+| F_ChangeDB | CommandButton | Btn_SelServDoc | Выбрать |
+| F_ChangeDB | Label | Label1 | База даных |
+| F_ChangeDB | Label | Label2 | База даных |
+| F_ChangeDB | Label | Label3 | Архив документов |
+| F_ChangeDB | Label | Label4 | Архив документов |
+| F_ChangeDB | Label | Lbl_zglv | Выбор базы данных |
+| F_ChangeDB | OptionButton | OB_Local | Локальная |
+| F_ChangeDB | OptionButton | OB_Server | Серверная |
+| F_ChangeDB | TextBox | TB_Local |  |
+| F_ChangeDB | TextBox | TB_LocDoc |  |
+| F_ChangeDB | TextBox | TB_ServDoc |  |
+| F_ChangeDB | TextBox | TB_Server |  |
+
 ## Поведение
 
 - Что происходит при открытии формы.

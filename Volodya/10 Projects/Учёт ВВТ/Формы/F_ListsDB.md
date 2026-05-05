@@ -14,9 +14,24 @@ reward_xp: 50
 ## Назначение формы
 - Кратко: для чего форма нужна, кто её пользователь (роль).
 ## Элементы интерфейса
-- Поля ввода (textbox, combobox, checkbox) и их смысл.
-- Кнопки и действия.
-- Таблицы/списки и что они показывают.
+
+| Форма | Тип элемента | Имя элемента | Caption / Text |
+| --- | --- | --- | --- |
+| F_ListsDB | CommandButton | Btn_Add | Добавить запись |
+| F_ListsDB | CommandButton | Btn_Change | Изменить запись |
+| F_ListsDB | CommandButton | Btn_Delete | Удалить запись |
+| F_ListsDB | Frame | Frame0 |  |
+| F_ListsDB | Frame | Frame1 |  |
+| F_ListsDB | Frame | Frame2 |  |
+| F_ListsDB | Frame | Frame3 |  |
+| F_ListsDB | Frame | Frame4 |  |
+| F_ListsDB | ListBox | LB_Nom |  |
+| F_ListsDB | ListBox | LB_NomTypes |  |
+| F_ListsDB | ListBox | LB_Roles |  |
+| F_ListsDB | ListBox | LB_Services |  |
+| F_ListsDB | ListBox | LB_Users |  |
+| F_ListsDB | MultiPage | MP_Change |  |
+
 ## Поведение
 
 - Что происходит при открытии формы.

@@ -14,9 +14,70 @@ reward_xp: 50
 ## Назначение формы
 - Кратко: для чего форма нужна, кто её пользователь (роль).
 ## Элементы интерфейса
-- Поля ввода (textbox, combobox, checkbox) и их смысл.
-- Кнопки и действия.
-- Таблицы/списки и что они показывают.
+
+| Форма | Тип элемента | Имя элемента | Caption / Text |
+| --- | --- | --- | --- |
+| F_Change | CheckBox | CB_CanApproveAny | Согласование изменений |
+| F_Change | CheckBox | CB_CanChangeOwnPWD | Изменение своего пароля |
+| F_Change | CheckBox | CB_CanEditAny | Редактирование данных |
+| F_Change | CheckBox | CB_CanManageAdmin | Редактирование администраторов |
+| F_Change | CheckBox | CB_CanManageUsers | Редактирование пользователей |
+| F_Change | CheckBox | CB_NomTypesIsActive | Активно |
+| F_Change | CheckBox | CB_ServicesIsActive | Активно |
+| F_Change | CheckBox | CB_UserChangePwd | Задать/сменить пароль |
+| F_Change | CheckBox | CB_UserIsActive | Пользователь активен |
+| F_Change | ComboBox | ComB_NomType |  |
+| F_Change | ComboBox | ComB_UserRole |  |
+| F_Change | CommandButton | Btn_Add | Сохранить |
+| F_Change | CommandButton | Btn_AddUS | --> Добавить --> |
+| F_Change | CommandButton | Btn_Cansel | Отмена |
+| F_Change | CommandButton | Btn_DelUS | <--    Убрать    <-- |
+| F_Change | CommandButton | Btn_NewPwdGen | Сгенерировать|
+| F_Change | CommandButton | Btn_NewSalt | Перешифровать|
+| F_Change | CommandButton | Btn_USCanApprove | Согласование |
+| F_Change | CommandButton | Btn_USCanEdit | Редактирование |
+| F_Change | Frame | Frame0 |  |
+| F_Change | Frame | Frame1 |  |
+| F_Change | Frame | Frame2 |  |
+| F_Change | Frame | Frame3 |  |
+| F_Change | Frame | Frame4 |  |
+| F_Change | Label | Label1 | Роль |
+| F_Change | Label | Label10 | Имя |
+| F_Change | Label | Label11 | Описание |
+| F_Change | Label | Label12 | КОД |
+| F_Change | Label | Label13 | Код |
+| F_Change | Label | Label14 | Наименование изд. |
+| F_Change | Label | Label15 | Тип номенкл. |
+| F_Change | Label | Label16 | Описание |
+| F_Change | Label | Label17 | Имя |
+| F_Change | Label | Label18 | Описание |
+| F_Change | Label | Label19 | КОД |
+| F_Change | Label | Label20 | Права доступа |
+| F_Change | Label | Label4 | Описание |
+| F_Change | Label | Label5 | Права доступа |
+| F_Change | Label | Label6 | Логин |
+| F_Change | Label | Label7 | ФИО |
+| F_Change | Label | Label9 | Роль |
+| F_Change | Label | Lbl_podskazka | Форма специально так выглядит, для удобства редактирования(Просто дабл кликом в код переходить удобнее), при инициализации сама регулирует нужные размеры фреймам |
+| F_Change | Label | Lbl_UserPwd | Пароль |
+| F_Change | ListBox | LB_UserWOService |  |
+| F_Change | ListBox | LB_UserWService |  |
+| F_Change | MultiPage | MP_Change |  |
+| F_Change | TextBox | TB_NomDescription |  |
+| F_Change | TextBox | TB_NomKod |  |
+| F_Change | TextBox | TB_NomName |  |
+| F_Change | TextBox | TB_NomTypesDescription |  |
+| F_Change | TextBox | TB_NomTypesKod |  |
+| F_Change | TextBox | TB_NomTypesName |  |
+| F_Change | TextBox | TB_RoleDescription |  |
+| F_Change | TextBox | TB_RoleName |  |
+| F_Change | TextBox | TB_ServicesCode |  |
+| F_Change | TextBox | TB_ServicesDescription |  |
+| F_Change | TextBox | TB_ServicesName |  |
+| F_Change | TextBox | TB_UserFullName |  |
+| F_Change | TextBox | TB_UserLogin |  |
+| F_Change | TextBox | TB_UserPwd |  |
+
 ## Поведение
 
 - Что происходит при открытии формы.
