@@ -66,19 +66,9 @@
               "icon": "lucide-file",
               "title": "Role sub or function"
             }
-          },
-          {
-            "id": "6e8324a0a17aece9",
-            "type": "leaf",
-            "state": {
-              "type": "empty",
-              "state": {},
-              "icon": "lucide-file",
-              "title": "Новая вкладка"
-            }
           }
         ],
-        "currentTab": 4
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -288,11 +278,17 @@
       "periodic-notes:Open today": false
     }
   },
-  "active": "6e8324a0a17aece9",
+  "active": "e4de80a53c52612b",
   "lastOpenFiles": [
+    "20 Areas/Reading/Books/Кромешный свет.md",
+    "20 Areas/Reading/Books/Коллективное сознательное.md",
+    "20 Areas/Reading/Books/Критерий страха.md",
+    "20 Areas/Reading/Authors/Сергей Сергеевич Слюсаренко.md",
+    "20 Areas/Reading/Books/Кубатура сферы.md",
+    "20 Areas/Reading/Books/Красный сигнал.md",
+    "20 Areas/Reading/Books/Константа связи.md",
     "20 Areas/Reading/Reading Dashboard.md",
     "30 Resources/VBA/Role sub or function.md",
-    "20 Areas/Reading/Books/Коллективное сознательное.md",
     "10 Projects/Учёт ВВТ/Схема проекта.md",
     "20 Areas/Reading/Books/Без названия.md",
     "90 Templates/Задача.md",
@@ -310,12 +306,6 @@
     "10 Projects/Учёт ВВТ/Таблицы БД/T_ChangeRequestItems.md",
     "10 Projects/Учёт ВВТ/Таблицы БД/T_ChangeRequests.md",
     "10 Projects/Учёт ВВТ/Таблицы БД/T_ProductTransfers.md",
-    "10 Projects/Учёт ВВТ/Таблицы БД/T_InventoryOrders.md",
-    "10 Projects/Учёт ВВТ/Таблицы БД/T_ProductServices.md",
-    "10 Projects/Учёт ВВТ/Таблицы БД/T_Products.md",
-    "10 Projects/Учёт ВВТ/Таблицы БД/T_ArchiveCases.md",
-    "10 Projects/Учёт ВВТ/Таблицы БД/T_Locations.md",
-    "10 Projects/Учёт ВВТ/Таблицы БД/T_ResponsiblePersons.md",
     "10 Projects/Учёт ВВТ/Таблицы БД",
     "20 Areas/Разработка/Учёт ВВТ/F_Change-1777997947304.webp",
     "20 Areas/Разработка/Учёт ВВТ/F_Change-1777998028877.webp",
