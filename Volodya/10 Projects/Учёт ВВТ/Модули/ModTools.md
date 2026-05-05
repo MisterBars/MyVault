@@ -346,6 +346,9 @@ Option Explicit
 ' Для булевых значений
 '       ChangeConstantInModSettings "ENABLE_FEATURE", True
 Sub ChangeConstantInModSettings(constantName As String, newValue As Variant)
+' @desc: Находит константу в модуле ModSettings и заменяет её значение в исходном коде VBA.
+' @role: Config
+' @todo: Добавить выход после успешной замены и сообщение, если константа не найдена.
     On Error GoTo ErrorHandler
     
     ' Получаем доступ к VBProject через CreateObject
@@ -420,16 +423,23 @@ Sub ChangeConstantInModSettings(constantName As String, newValue As Variant)
             Exit For
         End If
     Next vbComp
-    
+    set Found = Nothing
+    exit sub
 ErrorHandler:
     ShowError "ChangeConstantInModSettings", Err.Number, Err.description
 End Sub
 
 Public Function Q(ByVal s As String) As String
+' @desc: Экранирует строку для SQL и оборачивает её в одинарные кавычки.
+' @role: SQL
+' @todo: Использовать для текстовых SQL-параметров только вместе с проверкой на Null.
     Q = "'" & Replace$(NzStr(s), "'", "''") & "'"
 End Function
 
 Public Function NzStr(ByVal v As Variant, Optional ByVal defaultValue As String = "") As String
+' @desc: Возвращает строковое значение Variant либо значение по умолчанию при Null/Empty.
+' @role: Helper
+' @todo: При необходимости добавить обработку Error-значений Excel.
     If IsNull(v) Or IsEmpty(v) Then
         NzStr = defaultValue
     Else
@@ -438,6 +448,9 @@ Public Function NzStr(ByVal v As Variant, Optional ByVal defaultValue As String 
 End Function
 
 Public Function NzLng(ByVal v As Variant, Optional ByVal defaultValue As Long = 0) As Long
+' @desc: Возвращает числовое Long-значение Variant либо значение по умолчанию при Null/Empty.
+' @role: Helper
+' @todo: Добавить безопасную проверку IsNumeric перед CLng.
     If IsNull(v) Or IsEmpty(v) Or v = "" Then
         NzLng = defaultValue
     Else
@@ -446,6 +459,9 @@ Public Function NzLng(ByVal v As Variant, Optional ByVal defaultValue As Long = 
 End Function
 
 Public Function NzDate(ByVal v As Variant, Optional ByVal def As Date = 0) As Date
+' @desc: Возвращает значение даты из Variant либо дату по умолчанию при Null/Empty.
+' @role: Helper
+' @todo: Добавить безопасную проверку IsDate перед CDate.
     If IsNull(v) Or IsEmpty(v) Or v = "" Then
         NzDate = def
     Else
@@ -454,6 +470,9 @@ Public Function NzDate(ByVal v As Variant, Optional ByVal def As Date = 0) As Da
 End Function
 
 Public Function NzBool(ByVal v As Variant, Optional ByVal defaultValue As Boolean = False) As Boolean
+' @desc: Возвращает логическое значение из Variant либо значение по умолчанию при Null/Empty.
+' @role: Helper
+' @todo: При необходимости расширить обработку строковых значений True/False и 0/1.
     If IsNull(v) Or IsEmpty(v) Or v = "" Then
         NzBool = defaultValue
     Else
@@ -462,10 +481,16 @@ Public Function NzBool(ByVal v As Variant, Optional ByVal defaultValue As Boolea
 End Function
 
 Public Function BoolToText(ByVal b As Boolean) As String
+' @desc: Преобразует Boolean в текстовое значение "True" или "False".
+' @role: Formatting
+' @todo: Если потребуется UI-локализация, вернуть "Да/Нет" отдельной функцией.
     If b Then BoolToText = "True" Else BoolToText = "False"
 End Function
 
 Public Function QuoteSql(ByVal s As Variant) As String
+' @desc: Возвращает SQL-представление текстового значения или NULL для пустого Variant.
+' @role: SQL
+' @todo: По смыслу дублирует Q, позже можно оставить одну функцию.
     If IsNull(s) Or IsEmpty(s) Then
         QuoteSql = "NULL"
     Else
@@ -477,6 +502,9 @@ Public Function QuoteSql(ByVal s As Variant) As String
 End Function
 
 Public Function IsMissingOrNull(ByVal v As Variant) As Boolean
+' @desc: Проверяет, является ли значение пустым, Null, Nothing или пустой строкой.
+' @role: Helper
+' @todo: Название вводит в заблуждение, так как IsMissing для обычного Variant здесь не используется.
     If IsObject(v) Then
         IsMissingOrNull = (v Is Nothing)
     ElseIf IsNull(v) Then
@@ -489,6 +517,9 @@ Public Function IsMissingOrNull(ByVal v As Variant) As Boolean
 End Function
 
 Public Function Transpose2D(ByVal src As Variant) As Variant
+' @desc: Транспонирует двумерный массив, меняя местами строки и столбцы.
+' @role: Helper
+' @todo: Добавить обработку одномерных массивов и защиту от некорректной размерности.
     Dim r1 As Long, r2 As Long
     Dim c1 As Long, c2 As Long
     Dim r As Long, c As Long
@@ -515,6 +546,9 @@ Public Function Transpose2D(ByVal src As Variant) As Variant
 End Function
 
 Public Function BoolToSql(ByVal v As Boolean) As String
+' @desc: Преобразует Boolean в SQL-совместимое текстовое значение True или False.
+' @role: SQL
+' @todo: Использовать единообразно во всех SQL-выражениях с Yes/No полями.
     If v Then
         BoolToSql = "True"
     Else
@@ -526,6 +560,9 @@ Public Sub ShowError(ByVal procName As String, _
                      Optional ByVal ErrNum As Long = 0, _
                      Optional ByVal ErrDesc As String = "", _
                      Optional ByVal ExtraInfo As String = "")
+' @desc: Показывает пользователю унифицированное окно ошибки с именем процедуры и деталями.
+' @role: ErrorHandling
+' @todo: Позже можно добавить логирование ошибки в AuditLog или отдельный журнал ошибок.
                      
     Dim s As String
     
@@ -545,10 +582,16 @@ Public Sub ShowError(ByVal procName As String, _
 End Sub
 
 Public Sub ShowWarning(ByVal MsgText As String, Optional ByVal Title As String = "Предупреждение")
+' @desc: Показывает пользователю предупреждающее сообщение в едином стиле проекта.
+' @role: UI
+' @todo: Использовать для валидации и бизнес-ограничений вместо обычного MsgBox.
     MsgBox MsgText, vbExclamation, Title
 End Sub
 
 Public Sub ShowInfo(ByVal MsgText As String, Optional ByVal Title As String = "Информация")
+' @desc: Показывает пользователю информационное сообщение в едином стиле проекта.
+' @role: UI
+' @todo: Использовать для успешных операций и служебных уведомлений.
     MsgBox MsgText, vbInformation, Title
 End Sub
 
@@ -556,6 +599,9 @@ End Sub
 ' DB helpers
 ' ==============================================
 Public Function GetDbPath() As String
+' @desc: Возвращает путь к текущей рабочей базе данных в зависимости от режима Local/Server.
+' @role: Config
+' @todo: При необходимости добавить проверку существования файла базы.
     If SRV_LOC = False Then
         GetDbPath = LOCAL_BASE
     Else
@@ -564,10 +610,16 @@ Public Function GetDbPath() As String
 End Function
 
 Public Function OpenCurrentDb() As DAO.Database
+' @desc: Открывает текущую базу данных Access по пути из настроек и возвращает объект DAO.Database.
+' @role: DB
+' @todo: При массовом использовании следить за корректным закрытием внешних объектов Database.
     Set OpenCurrentDb = DBEngine.Workspaces(0).OpenDatabase(GetDbPath())
 End Function
 
 Public Function OpenWorkspace() As DAO.Workspace
+' @desc: Возвращает текущий DAO.Workspace для работы с транзакциями.
+' @role: DB
+' @todo: Использовать единообразно во всех CRUD-процедурах с BeginTrans/CommitTrans/Rollback.
     Set OpenWorkspace = DBEngine.Workspaces(0)
 End Function
 ```

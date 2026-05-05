@@ -364,177 +364,177 @@ End Type
 ' Public API
 '==================================================
 Public Function GetAllManufactures() As Variant
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Возвращает все записи справочника производителей в виде массива.
+' @role: Query
+' @todo: Проверить корректность названия таблицы Manufacturers.
     GetAllManufactures = GetAllSimpleDictionaryItems(sdkManufacturers)
 End Function
 
 Public Function GetAllCategories() As Variant
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Возвращает все записи справочника категорий в виде массива.
+' @role: Query
+' @todo: --
     GetAllCategories = GetAllSimpleDictionaryItems(sdkCategories)
 End Function
 
 Public Function GetAllExploitationTypes() As Variant
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Возвращает все записи справочника типов эксплуатации в виде массива.
+' @role: Query
+' @todo: --
     GetAllExploitationTypes = GetAllSimpleDictionaryItems(sdkExploitationTypes)
 End Function
 
 Public Function GetAllProductStatuses() As Variant
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Возвращает все записи справочника статусов изделий в виде массива.
+' @role: Query
+' @todo: --
     GetAllProductStatuses = GetAllSimpleDictionaryItems(sdkProductStatuses)
 End Function
 
 Public Function GetAllDocumentTypes() As Variant
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Возвращает все записи справочника типов документов в виде массива.
+' @role: Query
+' @todo: --
     GetAllDocumentTypes = GetAllSimpleDictionaryItems(sdkDocumentTypes)
 End Function
 
 Public Function GetManufacturerById(ByVal itemId As Long) As SimpleDictionaryItem
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Загружает одного производителя по ID в типизированную структуру.
+' @role: Query
+' @todo: --
     GetManufacturerById = GetSimpleDictionaryItemById(sdkManufacturers, itemId)
 End Function
 
 Public Function GetCategoryById(ByVal itemId As Long) As SimpleDictionaryItem
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Загружает одну категорию по ID в типизированную структуру.
+' @role: Query
+' @todo: --
     GetCategoryById = GetSimpleDictionaryItemById(sdkCategories, itemId)
 End Function
 
 Public Function GetExploitationTypeById(ByVal itemId As Long) As SimpleDictionaryItem
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Загружает один тип эксплуатации по ID в типизированную структуру.
+' @role: Query
+' @todo: --
     GetExploitationTypeById = GetSimpleDictionaryItemById(sdkExploitationTypes, itemId)
 End Function
 
 Public Function GetProductStatusById(ByVal itemId As Long) As SimpleDictionaryItem
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Загружает один статус изделия по ID в типизированную структуру.
+' @role: Query
+' @todo: --
     GetProductStatusById = GetSimpleDictionaryItemById(sdkProductStatuses, itemId)
 End Function
 
 Public Function GetDocumentTypeById(ByVal itemId As Long) As SimpleDictionaryItem
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Загружает один тип документа по ID в типизированную структуру.
+' @role: Query
+' @todo: --
     GetDocumentTypeById = GetSimpleDictionaryItemById(sdkDocumentTypes, itemId)
 End Function
 
 Public Function CreateManufacturer(ByVal itemName As String) As Long
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Создаёт нового производителя и возвращает его ID.
+' @role: Sync
+' @todo: --
     CreateManufacturer = CreateSimpleDictionaryItem(sdkManufacturers, itemName)
 End Function
 
 Public Function CreateCategory(ByVal itemName As String) As Long
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Создаёт новую категорию и возвращает её ID.
+' @role: Sync
+' @todo: --
     CreateCategory = CreateSimpleDictionaryItem(sdkCategories, itemName)
 End Function
 
 Public Function CreateExploitationType(ByVal itemName As String) As Long
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Создаёт новый тип эксплуатации и возвращает его ID.
+' @role: Sync
+' @todo: --
     CreateExploitationType = CreateSimpleDictionaryItem(sdkExploitationTypes, itemName)
 End Function
 
 Public Function CreateProductStatus(ByVal itemName As String) As Long
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Создаёт новый статус изделия и возвращает его ID.
+' @role: Sync
+' @todo: --
     CreateProductStatus = CreateSimpleDictionaryItem(sdkProductStatuses, itemName)
 End Function
 
 Public Function CreateDocumentType(ByVal itemName As String) As Long
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Создаёт новый тип документа и возвращает его ID.
+' @role: Sync
+' @todo: --
     CreateDocumentType = CreateSimpleDictionaryItem(sdkDocumentTypes, itemName)
 End Function
 
 Public Function UpdateManufacturer(ByVal itemId As Long, ByVal itemName As String) As Boolean
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Обновляет имя производителя по ID.
+' @role: Sync
+' @todo: --
     UpdateManufacturer = UpdateSimpleDictionaryItem(sdkManufacturers, itemId, itemName)
 End Function
 
 Public Function UpdateCategory(ByVal itemId As Long, ByVal itemName As String) As Boolean
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Обновляет имя категории по ID.
+' @role: Sync
+' @todo: --
     UpdateCategory = UpdateSimpleDictionaryItem(sdkCategories, itemId, itemName)
 End Function
 
 Public Function UpdateExploitationType(ByVal itemId As Long, ByVal itemName As String) As Boolean
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Обновляет имя типа эксплуатации по ID.
+' @role: Sync
+' @todo: --
     UpdateExploitationType = UpdateSimpleDictionaryItem(sdkExploitationTypes, itemId, itemName)
 End Function
 
 Public Function UpdateProductStatus(ByVal itemId As Long, ByVal itemName As String) As Boolean
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Обновляет имя статуса изделия по ID.
+' @role: Sync
+' @todo: --
     UpdateProductStatus = UpdateSimpleDictionaryItem(sdkProductStatuses, itemId, itemName)
 End Function
 
 Public Function UpdateDocumentType(ByVal itemId As Long, ByVal itemName As String) As Boolean
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Обновляет имя типа документа по ID.
+' @role: Sync
+' @todo: --
     UpdateDocumentType = UpdateSimpleDictionaryItem(sdkDocumentTypes, itemId, itemName)
 End Function
 
 Public Function DeleteManufacturer(ByVal itemId As Long) As Boolean
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Удаляет производителя по ID с учётом ограничений.
+' @role: Sync
+' @todo: --
     DeleteManufacturer = DeleteSimpleDictionaryItem(sdkManufacturers, itemId)
 End Function
 
 Public Function DeleteCategory(ByVal itemId As Long) As Boolean
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Удаляет категорию по ID с учётом ограничений.
+' @role: Sync
+' @todo: --
     DeleteCategory = DeleteSimpleDictionaryItem(sdkCategories, itemId)
 End Function
 
 Public Function DeleteExploitationType(ByVal itemId As Long) As Boolean
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Удаляет тип эксплуатации по ID с учётом ограничений.
+' @role: Sync
+' @todo: --
     DeleteExploitationType = DeleteSimpleDictionaryItem(sdkExploitationTypes, itemId)
 End Function
 
 Public Function DeleteProductStatus(ByVal itemId As Long) As Boolean
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Удаляет статус изделия по ID с учётом ограничений.
+' @role: Sync
+' @todo: --
     DeleteProductStatus = DeleteSimpleDictionaryItem(sdkProductStatuses, itemId)
 End Function
 
 Public Function DeleteDocumentType(ByVal itemId As Long) As Boolean
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Удаляет тип документа по ID с учётом ограничений.
+' @role: Sync
+' @todo: --
     DeleteDocumentType = DeleteSimpleDictionaryItem(sdkDocumentTypes, itemId)
 End Function
 
@@ -542,9 +542,9 @@ End Function
 ' Core generic logic
 '==================================================
 Private Function GetAllSimpleDictionaryItems(ByVal dictKind As SimpleDictionaryKind) As Variant
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Возвращает массив ID+Name для заданного простого справочника.
+' @role: Query
+' @todo: Исправить заполнение: второй столбец должен быть NzStr, не NzLng.
     On Error GoTo EH
     
     Dim db As DAO.Database
@@ -595,9 +595,9 @@ EH:
 End Function
 
 Private Function GetSimpleDictionaryItemById(ByVal dictKind As SimpleDictionaryKind, ByVal itemId As Long) As SimpleDictionaryItem
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Возвращает структуру SimpleDictionaryItem по ID из указанного справочника.
+' @role: Query
+' @todo: Исправить условие rs.EOF на Not rs.EOF и добавить обработку отсутствия записи.
     On Error GoTo EH
     
     Dim db As DAO.Database
@@ -632,9 +632,9 @@ EH:
 End Function
 
 Private Function CreateSimpleDictionaryItem(ByVal dictKind As SimpleDictionaryKind, ByVal itemName As String) As Long
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Создаёт запись в таблице справочника в транзакции и пишет аудит.
+' @role: Sync
+' @todo: Исправить SELECT @@IDENTITY синтаксис и имя поля NewID, убрать опечатки.
     On Error GoTo EH
     
     Dim db As DAO.Database
@@ -693,9 +693,9 @@ EH:
 End Function
 
 Private Function UpdateSimpleDictionaryItem(ByVal dictKind As SimpleDictionaryKind, ByVal itemId As Long, ByVal itemName As String) As Boolean
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Обновляет имя записи справочника в транзакции с проверками и аудитом.
+' @role: Sync
+' @todo: Исправить ExistsSimpleDictionaryById (должен проверять существование = True) и ссылку на newId при аудите.
     On Error GoTo EH
     
     Dim db As DAO.Database
@@ -768,9 +768,9 @@ EH:
 End Function
 
 Private Function DeleteSimpleDictionaryItem(ByVal dictKind As SimpleDictionaryKind, ByVal itemId As Long) As Boolean
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Удаляет запись справочника в транзакции, обрабатывая FK-ошибки и аудит.
+' @role: Sync
+' @todo: Убрать normName/oldName/newId из аудита или корректно их задать; поправить Exists/Name-логку.
     On Error GoTo EH
     
     Dim db As DAO.Database
@@ -832,9 +832,9 @@ End Function
 ' Validation / Exists
 '==================================================
 Private Function ValidateSimpleDictionaryName(ByVal dictKind As SimpleDictionaryKind, ByVal itemName As String) As Boolean
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Проверяет непустое и не слишком длинное имя для записи справочника.
+' @role: Validation
+' @todo: При необходимости добавить специфические ограничения по справочникам.
     itemName = Trim$(itemName)
     
     If LenB(itemName) = 0 Then
@@ -851,9 +851,9 @@ Private Function ValidateSimpleDictionaryName(ByVal dictKind As SimpleDictionary
 End Function
 
 Private Function ExistsSimpleDictionaryById(ByVal dictKind As SimpleDictionaryKind, ByVal itemId As Long) As Boolean
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Проверяет, существует ли запись с данным ID в таблице справочника.
+' @role: Validation
+' @todo: Исправить логику: использовать Not rs.EOF вместо Not rs.Close.
     On Error GoTo EH
     
     Dim db As DAO.Database
@@ -882,9 +882,9 @@ EH:
 End Function
 
 Private Function ExistsSimpleDictionaryName(ByVal dictKind As SimpleDictionaryKind, ByVal itemName As String, ByVal excludeId As Long) As Boolean
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Проверяет, есть ли запись с таким именем, исключая указанный ID.
+' @role: Validation
+' @todo: Исправить имя параметра excludeId и условие фильтра, использовать Not rs.EOF.
     On Error GoTo EH
     
     Dim db As DAO.Database
@@ -922,9 +922,9 @@ End Function
 '==================================================
 
 Private Function GetTableName(ByVal dictKind As SimpleDictionaryKind) As String
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Возвращает имя таблицы Access для указанного вида справочника.
+' @role: Mapper
+' @todo: Исправить опечатку Manufacterers → Manufacturers и обрабатывать Case Else без ShowError через Err.
     Select Case dictKind
         Case sdkManufacturers:      GetTableName = "Manufacterers"
         Case sdkCategories:         GetTableName = "Categories"
@@ -936,9 +936,9 @@ Private Function GetTableName(ByVal dictKind As SimpleDictionaryKind) As String
 End Function
 
 Private Function GetIdFieldName(ByVal dictKind As SimpleDictionaryKind) As String
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Возвращает имя поля ID для заданного справочника.
+' @role: Mapper
+' @todo: Исправить присваивание на GetIdFieldName = ..., сейчас в кейсах стоит GetTableName = ....
     Select Case dictKind
         Case sdkManufacturers:      GetTableName = "ManufactererID"
         Case sdkCategories:         GetTableName = "CategoryID"
@@ -950,9 +950,9 @@ Private Function GetIdFieldName(ByVal dictKind As SimpleDictionaryKind) As Strin
 End Function
 
 Private Function GetNameFieldName(ByVal dictKind As SimpleDictionaryKind) As String
-' @desc: **что делает конкретно эта процедура**
-' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
-' @todo: **заметка по процедуре/функции**
+' @desc: Возвращает имя поля названия для заданного справочника.
+' @role: Mapper
+' @todo: Аналогично GetIdFieldName: исправить присваивание на GetNameFieldName = ....
     Select Case dictKind
         Case sdkManufacturers:      GetTableName = "ManufactererName"
         Case sdkCategories:         GetTableName = "CategoryName"
@@ -962,7 +962,6 @@ Private Function GetNameFieldName(ByVal dictKind As SimpleDictionaryKind) As Str
         Case Else:                  ShowError "GetNameFieldName", Err.Number, Err.description, "Неизвестный тип справочника. - " & dictKind
     End Select
 End Function
-
 ```
 
 ## Черновые заметки

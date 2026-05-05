@@ -353,20 +353,8 @@ Public Type UserInfo
     createdByUserID As Long
 End Type
 
-Private Function IsMissingOrNull(ByVal v As Variant) As Boolean
-    If IsObject(v) Then
-        IsMissingOrNull = (v Is Nothing)
-    ElseIf IsNull(v) Then
-        IsMissingOrNull = True
-    ElseIf VarType(v) = vbString Then
-        IsMissingOrNull = (Trim$(CStr(v)) = "")
-    Else
-        IsMissingOrNull = False
-    End If
-End Function
-
 ' =========================
-' Ïóáëè÷íûå API
+' Публичные API
 ' =========================
 
 Public Function CreateUser( _
@@ -377,13 +365,16 @@ Public Function CreateUser( _
     ByVal changedByUserId As Long, _
     Optional ByVal isActive As Boolean = True, _
     Optional ByVal createdByUserID As Variant) As Long
+' @desc: Создаёт пользователя с логином, ФИО, ролью и паролем в транзакции и пишет аудит.
+' @role: Users
+' @todo: Добавить проверку результата ValidateUserInput и выйти при ошибках валидации.
     
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     Dim sSalt As String
     Dim sCipher As String
-    Dim newID As Long
+    Dim newId As Long
 
     ValidateUserInput userLogin, userFullName, roleID, plainPassword
 
@@ -394,7 +385,7 @@ Public Function CreateUser( _
     ws.BeginTrans
 
     If UserExists(userLogin, db) Then
-        ShowWarning "Ïîëüçîâàòåëü ñ ëîãèíîì '" & userLogin & "' óæå ñóùåñòâóåò."
+        ShowWarning "Пользователь с логином '" & userLogin & "' уже существует."
         GoTo CleanExit
     End If
 
@@ -419,18 +410,18 @@ Public Function CreateUser( _
     End If
     rs.Update
     rs.Bookmark = rs.LastModified
-    newID = NzLng(rs.Fields("UserID").Value)
+    newId = NzLng(rs.Fields("UserID").Value)
     rs.Close
     Set rs = Nothing
 
-    WriteAuditEvent db, "Users", newID, "Login", vbNullString, Trim$(userLogin), "INSERT", "UserCreate", changedByUserId, Null
-    WriteAuditEvent db, "Users", newID, "RoleID", vbNullString, CStr(roleID), "INSERT", "UserCreate", changedByUserId, Null
-    WriteAuditEvent db, "Users", newID, "IsActive", vbNullString, BoolToText(isActive), "INSERT", "UserCreate", changedByUserId, Null
-    WriteAuditEvent db, "Users", newID, "PasswordHash", vbNullString, "[CHANGED]", "INSERT", "UserCreate", changedByUserId, Null
-    WriteAuditEvent db, "Users", newID, "Salt", vbNullString, "[CHANGED]", "INSERT", "UserCreate", changedByUserId, Null
+    WriteAuditEvent db, "Users", newId, "Login", vbNullString, Trim$(userLogin), "INSERT", "UserCreate", changedByUserId, Null
+    WriteAuditEvent db, "Users", newId, "RoleID", vbNullString, CStr(roleID), "INSERT", "UserCreate", changedByUserId, Null
+    WriteAuditEvent db, "Users", newId, "IsActive", vbNullString, BoolToText(isActive), "INSERT", "UserCreate", changedByUserId, Null
+    WriteAuditEvent db, "Users", newId, "PasswordHash", vbNullString, "[CHANGED]", "INSERT", "UserCreate", changedByUserId, Null
+    WriteAuditEvent db, "Users", newId, "Salt", vbNullString, "[CHANGED]", "INSERT", "UserCreate", changedByUserId, Null
 
     ws.CommitTrans
-    CreateUser = newID
+    CreateUser = newId
 
 CleanExit:
     On Error Resume Next
@@ -441,7 +432,7 @@ CleanExit:
     Exit Function
 EH:
     On Error Resume Next
-    ws.Rollback
+    ws.RollBack
     ShowError "CreateUser", Err.Number, Err.description
     Resume CleanExit
 End Function
@@ -453,9 +444,12 @@ Public Function CreateUserWithRoleCheck( _
     ByVal roleID As Long, _
     ByVal plainPassword As String, _
     Optional ByVal isActive As Boolean = True) As Long
+' @desc: Создаёт пользователя только если текущий пользователь имеет право управлять целевой ролью.
+' @role: Users
+' @todo: Проверить, что CreateUser корректно обрабатывает ошибки валидации и возврат 0.
 
     If Not CanManageRole(currentUserId, roleID) Then
-        ShowWarning "Íåäîñòàòî÷íî ïðàâ äëÿ ñîçäàíèÿ ïîëüçîâàòåëÿ ñ ýòîé ðîëüþ."
+        ShowWarning "Недостаточно прав для создания пользователя с этой ролью."
         Exit Function
     End If
 
@@ -470,6 +464,9 @@ Public Function CreateUserWithRoleCheck( _
 End Function
 
 Public Function EnsureDefaultAdmin(Optional ByVal changedByUserId As Long = 0) As Long
+' @desc: Гарантирует наличие дефолтного администратора, создаёт его из настроек если не найден.
+' @role: Users
+' @todo: Проверить корректность получения adminRoleId (сейчас параметр для GetRoleIdByName выглядит сомнительно).
     Dim adminRoleId As Long
     Dim existingUserId As Long
 
@@ -480,13 +477,13 @@ Public Function EnsureDefaultAdmin(Optional ByVal changedByUserId As Long = 0) A
         EnsureDefaultAdmin = existingUserId
         Exit Function
     End If
-    Dim login, name, psw  As String
+    Dim login, Name, psw  As String
     login = Application.Run("'" & ADDIN_PATH & "Encrypt_VVT.xlam'!ModSettings.GetConstant", "DEFAULT_ADMIN_LOGIN")
-    name = Application.Run("'" & ADDIN_PATH & "Encrypt_VVT.xlam'!ModSettings.GetConstant", "DEFAULT_ADMIN_FULLNAME")
+    Name = Application.Run("'" & ADDIN_PATH & "Encrypt_VVT.xlam'!ModSettings.GetConstant", "DEFAULT_ADMIN_FULLNAME")
     psw = Application.Run("'" & ADDIN_PATH & "Encrypt_VVT.xlam'!ModSettings.GetConstant", "DEFAULT_ADMIN_PASSWORD")
     EnsureDefaultAdmin = CreateUser( _
         userLogin:=login, _
-        userFullName:=name, _
+        userFullName:=Name, _
         roleID:=adminRoleId, _
         plainPassword:=psw, _
         changedByUserId:=changedByUserId, _
@@ -501,6 +498,9 @@ Public Sub UpdateUser( _
     ByVal newRoleID As Long, _
     ByVal changedByUserId As Long, _
     Optional ByVal newIsActive As Boolean = True)
+' @desc: Обновляет логин, ФИО, роль и активность пользователя с валидацией и аудитом.
+' @role: Users
+' @todo: Вынести повторяющиеся проверки длины в отдельную функцию валидации.
 
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
@@ -512,32 +512,32 @@ Public Sub UpdateUser( _
     Dim sql As String
 
     If userID <= 0 Then
-        ShowWarning "Íåêîððåêòíûé UserID."
+        ShowWarning "Некорректный UserID."
          GoTo CleanExit
     End If
     If LenB(Trim$(newLogin)) = 0 Then
-        ShowWarning "Ïóñòîé ëîãèí."
+        ShowWarning "Пустой логин."
          GoTo CleanExit
     End If
     If Len(Trim$(newLogin)) > 50 Then
-        ShowWarning "Ëîãèí äëèííåå 50 ñèìâîëîâ."
+        ShowWarning "Логин длиннее 50 символов."
          GoTo CleanExit
     End If
     If LenB(Trim$(newFullName)) = 0 Then
-        ShowWarning "Ïóñòîå ÔÈÎ."
+        ShowWarning "Пустое ФИО."
          GoTo CleanExit
     End If
     If Len(Trim$(newFullName)) > 200 Then
-        ShowWarning "ÔÈÎ äëèííåå 200 ñèìâîëîâ."
+        ShowWarning "ФИО длиннее 200 символов."
          GoTo CleanExit
     End If
     If newRoleID <= 0 Then
-        ShowWarning "Íåêîððåêòíûé RoleID."
+        ShowWarning "Некорректный RoleID."
          GoTo CleanExit
     End If
 
     If Not CanManageRole(changedByUserId, newRoleID) Then
-        ShowWarning "Íåäîñòàòî÷íî ïðàâ äëÿ íàçíà÷åíèÿ äàííîé ðîëè."
+        ShowWarning "Недостаточно прав для назначения данной роли."
         GoTo CleanExit
     End If
 
@@ -552,7 +552,7 @@ Public Sub UpdateUser( _
         dbOpenDynaset)
 
     If rs.EOF Then
-        ShowWarning "Ïîëüçîâàòåëü íå íàéäåí."
+        ShowWarning "Пользователь не найден."
         GoTo CleanExit
     End If
     
@@ -568,7 +568,7 @@ Public Sub UpdateUser( _
         If Not rsDup.EOF Then
             rsDup.Close
             Set rsDup = Nothing
-            ShowWarning "Ïîëüçîâàòåëü ñ ëîãèíîì '" & Trim$(newLogin) & "' óæå ñóùåñòâóåò."
+            ShowWarning "Пользователь с логином '" & Trim$(newLogin) & "' уже существует."
             GoTo CleanExit
         End If
         rsDup.Close
@@ -611,20 +611,26 @@ CleanExit:
     Exit Sub
 EH:
     On Error Resume Next
-    ws.Rollback
+    ws.RollBack
     ShowError "UpdateUser", Err.Number, Err.description
     Resume CleanExit
 End Sub
 
 ' =========================
-' Óäàëåíèå / ìÿãêîå óäàëåíèå ïîëüçîâàòåëåé
+' Удаление / мягкое удаление пользователей
 ' =========================
 
 Private Function BuildDeletedLogin(ByVal oldLogin As String, ByVal userID As Long) As String
+' @desc: Формирует уникальный логин для soft-delete в формате old_login_deleted_ID, обрезая до 50 символов.
+' @role: Users
+' @todo: Убедиться, что длина итоговой строки всегда укладывается в ограничение поля Login.
     BuildDeletedLogin = Left$(Trim$(oldLogin), 50 - Len("_deleted_") - Len(CStr(userID))) & "_deleted_" & CStr(userID)
 End Function
 
 Public Function HasRows(ByVal db As DAO.Database, ByVal sql As String) As Boolean
+' @desc: Выполняет запрос и проверяет, вернул ли он хотя бы одну строку.
+' @role: Helper
+' @todo: Используется как универсальная проверка зависимостей, критично не забывать закрывать rs.
     Dim rs As DAO.Recordset
 
     On Error GoTo EH
@@ -644,6 +650,9 @@ EH:
 End Function
 
 Private Function UserHasProtectedHistory(ByVal userID As Long, Optional ByVal db As DAO.Database = Nothing) As Boolean
+' @desc: Проверяет, есть ли у пользователя связанные данные, запрещающие полное удаление (оставляем только soft-delete).
+' @role: Users
+' @todo: При добавлении новых сущностей с CreatedBy/UpdatedBy не забывать расширять этот список.
     Dim ownDb As Boolean
 
     If userID <= 0 Then Exit Function
@@ -674,6 +683,9 @@ CleanExit:
 End Function
 
 Private Sub PurgeUserGarbage(ByVal userID As Long, ByVal db As DAO.Database)
+' @desc: Удаляет все временные/черновые следы пользователя перед полным удалением (аудит, черновые заявоки, сессии, связи).
+' @role: Users
+' @todo: Следить, чтобы сюда попадали все новые черновые сущности, связанные с пользователем.
     db.Execute "DELETE FROM AuditLog " & _
                "WHERE ChangedByUserID=" & userID & _
                " AND BusinessEventType='UserCreate'", dbFailOnError
@@ -699,6 +711,9 @@ Private Sub PurgeUserGarbage(ByVal userID As Long, ByVal db As DAO.Database)
 End Sub
 
 Public Sub DeleteUserSmart(ByVal userID As Long, ByVal changedByUserId As Long)
+' @desc: Выполняет умное удаление пользователя: либо soft-delete с переименованием логина, либо полное удаление без истории.
+' @role: Users
+' @todo: Возможно, стоит возвращать Boolean с результатом операции, а не только сообщения.
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
@@ -708,15 +723,15 @@ Public Sub DeleteUserSmart(ByVal userID As Long, ByVal changedByUserId As Long)
     Dim newDeletedLogin As String
 
     If userID <= 0 Then
-        ShowWarning "Íåêîððåêòíûé UserID."
+        ShowWarning "Некорректный UserID."
         GoTo CleanExit
     End If
     If changedByUserId <= 0 Then
-        ShowWarning "Íåêîððåêòíûé changedByUserId."
+        ShowWarning "Некорректный changedByUserId."
         GoTo CleanExit
     End If
     If userID = changedByUserId Then
-        ShowWarning "Íåëüçÿ óäàëèòü ñàìîãî ñåáÿ."
+        ShowWarning "Нельзя удалить самого себя."
         GoTo CleanExit
     End If
 
@@ -730,7 +745,7 @@ Public Sub DeleteUserSmart(ByVal userID As Long, ByVal changedByUserId As Long)
         dbOpenSnapshot)
 
     If rs.EOF Then
-        ShowWarning "Ïîëüçîâàòåëü íå íàéäåí."
+        ShowWarning "Пользователь не найден."
         GoTo CleanExit
     End If
 
@@ -742,7 +757,7 @@ Public Sub DeleteUserSmart(ByVal userID As Long, ByVal changedByUserId As Long)
     Set rs = Nothing
 
     If Not CanManageRole(changedByUserId, oldRoleID) Then
-        ShowWarning "Íåäîñòàòî÷íî ïðàâ äëÿ óäàëåíèÿ ïîëüçîâàòåëÿ ñ äàííîé ðîëüþ."
+        ShowWarning "Недостаточно прав для удаления пользователя с данной ролью."
         GoTo CleanExit
     End If
 
@@ -782,12 +797,15 @@ CleanExit:
 
 EH:
     On Error Resume Next
-    ws.Rollback
+    ws.RollBack
     ShowError "DeleteUserSmart", Err.Number, Err.description
     Resume CleanExit
 End Sub
 
 Public Sub ChangeUserPassword(ByVal userID As Long, ByVal newPlainPassword As String, ByVal changedByUserId As Long)
+' @desc: Меняет пароль пользователя, пересчитывая хэш и соль, и пишет аудит изменения.
+' @role: Security
+' @todo: Добавить политику сложности пароля и ограничение по длине.
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
@@ -795,11 +813,11 @@ Public Sub ChangeUserPassword(ByVal userID As Long, ByVal newPlainPassword As St
     Dim sCipher As String
 
     If userID <= 0 Then
-        ShowWarning "Íåêîððåêòíûé UserID."
+        ShowWarning "Некорректный UserID."
         GoTo CleanExit
     End If
     If LenB(Trim$(newPlainPassword)) = 0 Then
-        ShowWarning "Íîâûé ïàðîëü íå çàäàí."
+        ShowWarning "Новый пароль не задан."
         GoTo CleanExit
     End If
 
@@ -811,7 +829,7 @@ Public Sub ChangeUserPassword(ByVal userID As Long, ByVal newPlainPassword As St
 
     Set rs = db.OpenRecordset("SELECT UserID, Salt, PasswordHash FROM Users WHERE UserID=" & userID, dbOpenDynaset)
     If rs.EOF Then
-        ShowWarning "Ïîëüçîâàòåëü íå íàéäåí."
+        ShowWarning "Пользователь не найден."
         GoTo CleanExit
     End If
 
@@ -842,12 +860,15 @@ CleanExit:
     Exit Sub
 EH:
     On Error Resume Next
-    ws.Rollback
+    ws.RollBack
     ShowError "ChangeUserPassword", Err.Number, Err.description
     Resume CleanExit
 End Sub
 
 Public Sub RotateUserSalt(ByVal userID As Long, ByVal changedByUserId As Long)
+' @desc: Переинициализирует соль и хэш пароля одного пользователя без изменения самого пароля.
+' @role: Security
+' @todo: Подумать о логике повторного вызова при частичных ошибках шифрования.
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
@@ -856,7 +877,7 @@ Public Sub RotateUserSalt(ByVal userID As Long, ByVal changedByUserId As Long)
     Dim newSalt As String, newCipher As String
 
     If userID <= 0 Then
-        ShowWarning "Íåêîððåêòíûé UserID."
+        ShowWarning "Некорректный UserID."
         GoTo CleanExit
     End If
 
@@ -868,18 +889,18 @@ Public Sub RotateUserSalt(ByVal userID As Long, ByVal changedByUserId As Long)
 
     Set rs = db.OpenRecordset("SELECT UserID, PasswordHash, Salt FROM Users WHERE UserID=" & userID, dbOpenDynaset)
     If rs.EOF Then
-        ShowWarning "Ïîëüçîâàòåëü íå íàéäåí."
+        ShowWarning "Пользователь не найден."
         GoTo CleanExit
     End If
 
     oldCipher = NzStr(rs.Fields("PasswordHash").Value)
     oldSalt = NzStr(rs.Fields("Salt").Value)
     If LenB(oldCipher) = 0 Then
-        ShowWarning "Ïóñòîé PasswordHash."
+        ShowWarning "Пустой PasswordHash."
         GoTo CleanExit
     End If
     If LenB(oldSalt) = 0 Then
-        ShowWarning "Ïóñòàÿ Salt."
+        ShowWarning "Пустая Salt."
         GoTo CleanExit
     End If
     Dim decrypted As String
@@ -911,12 +932,15 @@ CleanExit:
     Exit Sub
 EH:
     On Error Resume Next
-    ws.Rollback
+    ws.RollBack
     ShowError "RotateUserSalt", Err.Number, Err.description
     Resume CleanExit
 End Sub
 
 Public Function RotateAllUsersSalt(ByVal changedByUserId As Long, Optional ByVal onlyActive As Boolean = True) As Long
+' @desc: Массово пересчитывает соль и хэш пароля для всех (или только активных) пользователей и пишет аудит.
+' @role: Security
+' @todo: Сейчас при первой проблеме с конкретным пользователем делается GoTo CleanExit — стоит либо пропускать проблемных, либо логировать.
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
@@ -944,11 +968,11 @@ Public Function RotateAllUsersSalt(ByVal changedByUserId As Long, Optional ByVal
         oldSalt = NzStr(rs.Fields("Salt").Value)
 
         If LenB(oldCipher) = 0 Then
-            ShowWarning "Ïóñòîé PasswordHash ó UserID=" & curUserId
+            ShowWarning "Пустой PasswordHash у UserID=" & curUserId
             GoTo CleanExit
         End If
         If LenB(oldSalt) = 0 Then
-            ShowWarning "Ïóñòàÿ Salt ó UserID=" & curUserId
+            ShowWarning "Пустая Salt у UserID=" & curUserId
             GoTo CleanExit
         End If
         Dim decrypted As String
@@ -985,19 +1009,22 @@ CleanExit:
     Exit Function
 EH:
     On Error Resume Next
-    ws.Rollback
+    ws.RollBack
     ShowError "RotateAllUsersSalt", Err.Number, Err.description
     Resume CleanExit
 End Function
 
 Public Sub SetUserActive(ByVal userID As Long, ByVal newIsActive As Boolean, ByVal changedByUserId As Long)
+' @desc: Включает или отключает пользователя (IsActive) с записью события в аудит.
+' @role: Users
+' @todo: Возможен запрет отключения собственных прав; сейчас это не проверяется.
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     Dim oldValue As Boolean
 
     If userID <= 0 Then
-        ShowWarning "Íåêîððåêòíûé UserID."
+        ShowWarning "Некорректный UserID."
         GoTo CleanExit
     End If
 
@@ -1009,7 +1036,7 @@ Public Sub SetUserActive(ByVal userID As Long, ByVal newIsActive As Boolean, ByV
 
     Set rs = db.OpenRecordset("SELECT UserID, IsActive FROM Users WHERE UserID=" & userID, dbOpenDynaset)
     If rs.EOF Then
-        ShowWarning "Ïîëüçîâàòåëü íå íàéäåí."
+        ShowWarning "Пользователь не найден."
         GoTo CleanExit
     End If
 
@@ -1034,23 +1061,26 @@ CleanExit:
     Exit Sub
 EH:
     On Error Resume Next
-    ws.Rollback
+    ws.RollBack
     ShowError "SetUserActive", Err.Number, Err.description
     Resume CleanExit
 End Sub
 
 Public Sub RenameUserLogin(ByVal userID As Long, ByVal newLogin As String, ByVal changedByUserId As Long)
+' @desc: Переименовывает логин пользователя с проверкой уникальности и записью в аудит.
+' @role: Users
+' @todo: Локализовать текст предупреждений и унифицировать формат сообщений о занятости логина.
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     Dim oldLogin As String
 
     If userID <= 0 Then
-        ShowWarning "Íåêîððåêòíûé UserID."
+        ShowWarning "Некорректный UserID."
         GoTo CleanExit
     End If
     If LenB(Trim$(newLogin)) = 0 Then
-        ShowWarning "Íîâûé ëîãèí ïóñòîé."
+        ShowWarning "Новый логин пустой."
         GoTo CleanExit
     End If
 
@@ -1061,13 +1091,13 @@ Public Sub RenameUserLogin(ByVal userID As Long, ByVal newLogin As String, ByVal
     ws.BeginTrans
 
     If UserExists(newLogin, db) Then
-        ShowWarning "Ëîãèí óæå çàíÿò: " & newLogin
+        ShowWarning "Логин уже занят: " & newLogin
         GoTo CleanExit
     End If
 
     Set rs = db.OpenRecordset("SELECT UserID, Login FROM Users WHERE UserID=" & userID, dbOpenDynaset)
     If rs.EOF Then
-        ShowWarning "Ïîëüçîâàòåëü íå íàéäåí."
+        ShowWarning "Пользователь не найден."
         GoTo CleanExit
     End If
 
@@ -1092,12 +1122,15 @@ CleanExit:
     Exit Sub
 EH:
     On Error Resume Next
-    ws.Rollback
+    ws.RollBack
     ShowError "RenameUserLogin", Err.Number, Err.description
     Resume CleanExit
 End Sub
 
 Public Function ValidateUserPassword(ByVal userLogin As String, ByVal plainPassword As String) As Boolean
+' @desc: Проверяет, соответствует ли введённый пароль хранимому хэшу и соли для активного пользователя.
+' @role: Auth
+' @todo: Добавить обработку ошибок шифрования и логирование неудачных попыток входа.
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     Dim storedCipher As String, storedSalt As String
@@ -1127,6 +1160,9 @@ Public Function ValidateUserPassword(ByVal userLogin As String, ByVal plainPassw
 End Function
 
 Public Function GetUserIdByLogin(ByVal userLogin As String) As Long
+' @desc: Возвращает ID пользователя по логину или 0, если пользователь не найден.
+' @role: Users
+' @todo: При необходимости добавить фильтр по IsActive, если где-то важно игнорировать отключённых.
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
 
@@ -1141,6 +1177,9 @@ Public Function GetUserIdByLogin(ByVal userLogin As String) As Long
 End Function
 
 Public Function UserExists(ByVal userLogin As String, Optional ByVal db As DAO.Database = Nothing) As Boolean
+' @desc: Проверяет факт существования пользователя с заданным логином.
+' @role: Users
+' @todo: В будущем можно разделить варианты проверки “любой” и “только активный” пользователь.
     Dim ownDb As Boolean
     Dim rs As DAO.Recordset
 
@@ -1158,6 +1197,9 @@ Public Function UserExists(ByVal userLogin As String, Optional ByVal db As DAO.D
 End Function
 
 Public Function GetUserRoleId(ByVal userID As Long) As Long
+' @desc: Возвращает ID роли пользователя по его UserID.
+' @role: Users
+' @todo: При ошибке лучше возвращать 0 и логировать, сейчас просто Exit Function.
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
@@ -1180,15 +1222,14 @@ Public Function GetUserRoleId(ByVal userID As Long) As Long
     GetUserRoleId = result
 End Function
 
-Public Function GetCurrentUserId() As Long
-    GetCurrentUserId = GetConstant("CURRENT_USERID")
-End Function
-
 ' =========================
-' Ïðîâåðêè ïðàâ
+' Проверки прав
 ' =========================
 
 Public Function CanManageRole(ByVal currentUserId As Long, ByVal targetRoleID As Long) As Boolean
+' @desc: Проверяет, может ли пользователь менять/назначать указанную роль с учётом флагов CanManageUsers/CanManageAdmin.
+' @role: Security
+' @todo: Добавить обработку случая, когда роль не найдена, и явное логирование отказов.
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     Dim curRoleId As Long
@@ -1233,51 +1274,43 @@ CleanExit:
 End Function
 
 ' =========================
-' Âñïîìîãàòåëüíûå ïðîâåðêè
+' Вспомогательные проверки
 ' =========================
 
 Private Sub ValidateUserInput(ByVal userLogin As String, ByVal userFullName As String, ByVal roleID As Long, ByVal plainPassword As String)
-    If LenB(Trim$(userLogin)) = 0 Then ShowWarning "Ëîãèí íå ìîæåò áûòü ïóñòûì."
-    If Len(Trim$(userLogin)) > 50 Then ShowWarning "Ëîãèí äîëæåí áûòü êîðî÷å 50 ñèìâîëîâ."
-    If LenB(Trim$(userFullName)) = 0 Then ShowWarning "ÔÈÎ íå ìîæåò áûòü ïóñòûì."
-    If Len(Trim$(userFullName)) > 200 Then ShowWarning "ÔÈÎ äîëæíî áûòü êîðî÷å 200 ñèìâîëîâ."
-    If roleID <= 0 Then ShowWarning "Íåêîððåêòíûé ID ðîëè."
-    If LenB(plainPassword) = 0 Then ShowWarning "Ïàðîëü íå äîëæåí áûòü ïóñòûì."
+' @desc: Валидирует логин, ФИО, роль и пароль и показывает предупреждения при нарушении правил.
+' @role: Validation
+' @todo: Возвращать Boolean-результат вместо набора ShowWarning, чтобы вызывать CreateUser только при успехе.
+    If LenB(Trim$(userLogin)) = 0 Then ShowWarning "Логин не может быть пустым."
+    If Len(Trim$(userLogin)) > 50 Then ShowWarning "Логин должен быть короче 50 символов."
+    If LenB(Trim$(userFullName)) = 0 Then ShowWarning "ФИО не может быть пустым."
+    If Len(Trim$(userFullName)) > 200 Then ShowWarning "ФИО должно быть короче 200 символов."
+    If roleID <= 0 Then ShowWarning "Некорректный ID роли."
+    If LenB(plainPassword) = 0 Then ShowWarning "Пароль не должен быть пустым."
 End Sub
 
 
 ' =========================
-' Òåñòîâûå / ñëóæåáíûå ïðèìåðû âûçîâà
+' Служебные примеры вызова
 ' =========================
 
 Public Sub CreateDefaultAdmin()
-    Dim newID As Long
-    newID = EnsureDefaultAdmin(0)
-    ShowInfo "Áàçîâûé ïîëüçîâàòåëü Admin ñîçäàí ñ ïàðîëåì " & Application.Run("'" & ADDIN_PATH & "Encrypt_VVT.xlam'!ModSettings.GetConstant", "DEFAULT_ADMIN_PASSWORD"), vbInformation
-End Sub
-
-Public Sub Test_SetUserInactive()
-    SetUserActive 1, False, 1
-End Sub
-
-Public Sub Test_RenameLogin()
-    RenameUserLogin 1, "admin2", 1
-End Sub
-
-Public Sub Test_RotateAllSalts()
-    Dim cnt As Long
-    cnt = RotateAllUsersSalt(1, True)
-    MsgBox "Ïåðåñîëåíî ïîëüçîâàòåëåé: " & cnt, vbInformation
-End Sub
-
-Sub tets()
-    Call RotateUserSalt(1, 1)
+' @desc: Создаёт администратора по умолчанию и показывает пользователю его стандартный пароль.
+' @role: Test
+' @todo: --
+    Dim newId As Long
+    newId = EnsureDefaultAdmin(0)
+    ShowInfo "Базовый пользователь Admin создан с паролем " & Application.Run("'" & ADDIN_PATH & "Encrypt_VVT.xlam'!ModSettings.GetConstant", "DEFAULT_ADMIN_PASSWORD"), vbInformation
 End Sub
 
 ' ================================================================
-' Ïîëó÷åíèå äàííûõ î âñåõ ïîëüçîâàòåëÿõ
+' Получение данных о всех пользователях
 ' ================================================================
+
 Public Function GetAllUsers() As DAO.Recordset
+' @desc: Возвращает snapshot со всеми пользователями и их ролями, кроме логинов вида *_deleted_*.
+' @role: Users
+' @todo: Вызывать только там, где корректно закрывается возвращённый Recordset.
     Dim db As DAO.Database
     Dim sql As String
 
@@ -1292,6 +1325,9 @@ Public Function GetAllUsers() As DAO.Recordset
 End Function
 
 Public Function GetUserById(ByVal userID As Long) As UserInfo
+' @desc: Загружает полную информацию о пользователе в структуру UserInfo по его ID.
+' @role: Users
+' @todo: При необходимости добавить флаг для включения/исключения чувствительных полей (PasswordHash/Salt).
     Dim ws As DAO.Workspace
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
@@ -1340,6 +1376,9 @@ Public Function GetUserById(ByVal userID As Long) As UserInfo
 End Function
 
 Public Function UserExistsById(ByVal userID As Long, Optional ByVal db As DAO.Database = Nothing) As Boolean
+' @desc: Проверяет, существует ли пользователь с указанным ID.
+' @role: Users
+' @todo: Аналогично UserExists, можно добавить вариант проверки только активных.
     Dim ownDb As Boolean
     Dim rs As DAO.Recordset
 
@@ -1359,6 +1398,9 @@ Public Function UserExistsById(ByVal userID As Long, Optional ByVal db As DAO.Da
 End Function
 
 Public Function GetUsersByService(ByVal serviceID As Long) As DAO.Recordset
+' @desc: Возвращает подробный список пользователей и их прав для конкретной службы (ServiceID).
+' @role: Users
+' @todo: Сейчас при serviceID=0 только предупреждение; можно сразу выходить из функции.
     Dim db As DAO.Database
     Dim sqlA As String
     Dim sqlB As String
@@ -1406,6 +1448,9 @@ Public Function GetUsersByService(ByVal serviceID As Long) As DAO.Recordset
 End Function
 
 Public Function GetUsersForNewService() As DAO.Recordset
+' @desc: Возвращает список активных пользователей и их ролей для назначения на новую службу.
+' @role: Users
+' @todo: Проверить, нужно ли фильтровать логины с *_deleted_* по тому же правилу, что и в GetAllUsers.
     Dim db As DAO.Database
     Dim sqlA As String
     Dim sqlB As String
