@@ -288,8 +288,7 @@
       "templater-obsidian:Templater": false,
       "table-editor-obsidian:Advanced Tables Toolbar": false,
       "obsidian-git:Open Git source control": false,
-      "obsidian-kanban:Create new board": false,
-      "periodic-notes:Open today": false
+      "obsidian-kanban:Create new board": false
     }
   },
   "active": "ce16bcb40b36e167",
