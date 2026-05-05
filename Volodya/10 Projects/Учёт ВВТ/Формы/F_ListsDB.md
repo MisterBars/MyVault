@@ -9,7 +9,6 @@ tags:
   - skill/vba
 reward_xp: 50
 ---
-
 # Форма
 ![[F_ListsDB-1777997740460.webp|1046x594]]
 ## Назначение формы

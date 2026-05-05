@@ -85,16 +85,17 @@
             "id": "3e77cf739225f256",
             "type": "leaf",
             "state": {
-              "type": "image",
+              "type": "markdown",
               "state": {
-                "file": "20 Areas/Разработка/Учёт ВВТ/F_Change-1777997947304.webp"
+                "file": "10 Projects/Учёт ВВТ/Формы/F_Menu.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-image",
-              "title": "F_Change-1777997947304"
+              "icon": "lucide-file",
+              "title": "F_Menu"
             }
           }
-        ],
-        "currentTab": 5
+        ]
       }
     ],
     "direction": "vertical"
@@ -304,16 +305,17 @@
       "periodic-notes:Open today": false
     }
   },
-  "active": "9f90ef2d3713e7b0",
+  "active": "9201b4f177e38303",
   "lastOpenFiles": [
+    "10 Projects/Учёт ВВТ/Формы/F_Menu.md",
+    "10 Projects/Учёт ВВТ/Формы/F_ListsDB.md",
+    "10 Projects/Учёт ВВТ/Формы/F_Auth.md",
+    "10 Projects/Учёт ВВТ/Формы/F_ChangeDB.md",
     "10 Projects/Учёт ВВТ/Формы/F_Change.md",
+    "20 Areas/Разработка/Учёт ВВТ/F_Change-1777997947304.webp",
     "20 Areas/Разработка/Учёт ВВТ/F_Change-1777998028877.webp",
     "20 Areas/Разработка/Учёт ВВТ/F_Change-1777998005130.webp",
     "20 Areas/Разработка/Учёт ВВТ/F_Change-1777997977485.webp",
-    "20 Areas/Разработка/Учёт ВВТ/F_Change-1777997947304.webp",
-    "10 Projects/Учёт ВВТ/Формы/F_Auth.md",
-    "10 Projects/Учёт ВВТ/Формы/F_ChangeDB.md",
-    "10 Projects/Учёт ВВТ/Формы/F_ListsDB.md",
     "20 Areas/Разработка/Учёт ВВТ/F_ListsDB-1777997740460.webp",
     "20 Areas/Разработка/Учёт ВВТ/F_ChangeDB-1777997700634.webp",
     "20 Areas/Разработка/Учёт ВВТ/F_Change-1777997646282.webp",
@@ -324,7 +326,6 @@
     "02 Profile/Skills/VBA.md",
     "01 Inbox/F_Auth-1777996469317.webp",
     "01 Inbox/F_Auth-1777996541539.webp",
-    "10 Projects/Учёт ВВТ/Формы/F_Menu.md",
     "01 Inbox",
     "10 Projects/Учёт ВВТ/Модули/Mod_F_Change.md",
     "10 Projects/Учёт ВВТ/Классы/CMenuButtonHandler.md",

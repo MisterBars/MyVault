@@ -9,7 +9,6 @@ tags:
   - skill/vba
 reward_xp: 50
 ---
-
 # Форма
 
 ![[F_Change-1777997947304.webp|1042x741]]
