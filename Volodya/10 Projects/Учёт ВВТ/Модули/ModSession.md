@@ -354,6 +354,9 @@ Public g_IsAuthorized As Boolean
 Public g_HeartbeatScheduledAt As Date
 
 Private Function OpenDb() As DAO.Database
+' @desc: Обёртка над OpenCurrentDb для удобства внутри модуля сессий.
+' @role: DB
+' @todo: При изменении способа открытия БД править только OpenCurrentDb.
     Set OpenDb = OpenCurrentDb
 End Function
 
@@ -363,6 +366,9 @@ End Function
 Public Sub SessionStartup(ByVal userID As Long, _
                           Optional ByVal userLogin As String = "", _
                           Optional ByVal roleID As Long = 0)
+' @desc: Инициализирует сессию пользователя: чистит хвосты, открывает новую запись UserSessions и запускает heartbeat.
+' @role: Session
+' @todo: При неуспешном SessionOpen можно добавить явное сообщение пользователю.
 
     Call SessionResetGlobals
     
@@ -381,6 +387,9 @@ Public Sub SessionStartup(ByVal userID As Long, _
 End Sub
 
 Public Sub SessionShutdown()
+' @desc: Корректно завершает текущую сессию: останавливает heartbeat, закрывает запись UserSessions и сбрасывает глобалы.
+' @role: Session
+' @todo: Рассмотреть логирование причин завершения (нормальный выход, ошибка, логаут).
     On Error Resume Next
     Call SessionStopHeartbeat
     Call SessionClose
@@ -392,6 +401,9 @@ End Sub
 ' Очистка при запуске
 ' ================================================================
 Public Sub SessionCleanupOnStartup(ByVal userID As Long)
+' @desc: Помечает старые активные сессии пользователя как Expired/Closed при новом входе.
+' @role: Session
+' @todo: Добавить ShowError при критической ошибке вместо тихого ExitPoint.
     Dim db As DAO.Database
     Dim sql As String
     
@@ -422,6 +434,9 @@ End Sub
 ' Открытие/закрытие сессии
 ' ================================================================
 Public Function SessionOpen(ByVal userID As Long) As Long
+' @desc: Создаёт новую запись в UserSessions для пользователя, обновляет LastLogin и заполняет g_SessionID/g_SessionToken.
+' @role: Session
+' @todo: При ошибке стоит показывать ShowError, сейчас просто возвращается 0.
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     Dim sql As String
@@ -472,8 +487,10 @@ CleanExit:
     Set db = Nothing
 End Function
 
-
 Public Sub SessionClose()
+' @desc: Помечает текущую сессию как Closed и проставляет LogoutTime для активной записи.
+' @role: Session
+' @todo: В будущем можно различать ручное закрытие и авто-логаут по типу события.
     Dim db As DAO.Database
     Dim sql As String
     
@@ -497,6 +514,9 @@ ExitPoint:
 End Sub
 
 Public Sub SessionMarkCrashed()
+' @desc: Помечает текущую сессию как Crashed, если Excel завершился/отключился некорректно.
+' @role: Session
+' @todo: Рассмотреть вызов при обработке ошибок верхнего уровня (Application-level error handler).
     Dim db As DAO.Database
     Dim sql As String
     
@@ -520,6 +540,9 @@ ExitPoint:
 End Sub
 
 Public Sub SessionExpireCurrent()
+' @desc: Помечает текущую активную сессию как Expired и устанавливает LogoutTime.
+' @role: Session
+' @todo: Сейчас вызывается только из SessionIsValid — можно добавить отдельный сценарий принудительного истечения.
     Dim db As DAO.Database
     Dim sql As String
     
@@ -546,6 +569,9 @@ End Sub
 ' Валидация и проверка сессии
 ' ================================================================
 Public Sub SessionPing()
+' @desc: Обновляет LastPing для текущей активной сессии, сигнализируя, что клиент ещё жив.
+' @role: Session
+' @todo: При регулярных ошибках можно добавить счётчик неудачных пингов для диагностики.
     Dim db As DAO.Database
     Dim sql As String
     
@@ -570,6 +596,9 @@ ExitPoint:
 End Sub
 
 Public Function SessionIsValid() As Boolean
+' @desc: Проверяет по таблице UserSessions, активна ли текущая сессия и не истёк ли таймаут.
+' @role: Session
+' @todo: При частых истечениях можно логировать в аудит или показывать пользователю причину разлогина.
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     Dim sql As String
@@ -621,6 +650,9 @@ ExitPoint:
 End Function
 
 Public Sub SessionStartHeartbeat()
+' @desc: Планирует периодический вызов SessionHeartBeatTick через Application.OnTime.
+' @role: Session
+' @todo: Убедиться, что при закрытии книги всегда вызывается SessionStopHeartbeat.
     On Error Resume Next
     Call SessionStopHeartbeat
     g_HeartbeatScheduledAt = Now + TimeSerial(0, HEARTBEAT_INTERVAL_MINUTES, 0)
@@ -629,7 +661,11 @@ Public Sub SessionStartHeartbeat()
                        Schedule:=True
     On Error GoTo 0
 End Sub
+
 Public Sub SessionStopHeartbeat()
+' @desc: Отменяет запланированный таймер heartbeat и сбрасывает время следующего срабатывания.
+' @role: Session
+' @todo: При отладке удобно логировать отмену heartbeat в Immediate/лог.
     On Error Resume Next
     If g_HeartbeatScheduledAt > 0 Then
         Application.OnTime EarliestTime:=g_HeartbeatScheduledAt, _
@@ -641,6 +677,9 @@ Public Sub SessionStopHeartbeat()
 End Sub
 
 Public Sub SessionHeartBeatTick()
+' @desc: Периодически проверяет валидность сессии и обновляет LastPing либо останавливает heartbeat при истечении.
+' @role: Session
+' @todo: Добавить вызов UI-логики (например, показать форму логина) при потере авторизации.
     On Error GoTo ExitPoint
     
     If g_IsAuthorized = False Then GoTo ExitPoint
@@ -660,6 +699,9 @@ End Sub
 ' Вспомогательные функции
 ' ================================================================
 Public Function SessionTokenIsActive(ByVal token As String) As Boolean
+' @desc: Проверяет по БД, существует ли активная сессия с указанным токеном.
+' @role: Session
+' @todo: Использовать при необходимости межклиентной валидации токена.
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     Dim sql As String
@@ -688,6 +730,9 @@ ExitPoint:
 End Function
 
 Public Function SessionGetToken(ByVal sessionID As Long) As String
+' @desc: Возвращает токен сессии по её ID из таблицы UserSessions.
+' @role: Session
+' @todo: Нужна только для отладочных сценариев; в боевом коде лучше работать через g_SessionToken.
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     Dim sql As String
@@ -714,6 +759,9 @@ ExitPoint:
 End Function
 
 Public Sub SessionResetGlobals()
+' @desc: Сбрасывает все глобальные переменные сессии и авторизации в исходное состояние.
+' @role: Session
+' @todo: Важно вызывать при любом фатальном сбое авторизации.
     g_SessionID = 0
     g_SessionToken = vbNullString
     g_CurrentUserID = 0
@@ -723,11 +771,13 @@ Public Sub SessionResetGlobals()
     g_HeartbeatScheduledAt = CDate(0)
 End Sub
 
-
 ' ================================================================
 ' Токен сессии
 ' ================================================================
 Public Function CreateSessionToken_GUID() As String
+' @desc: Генерирует GUID-подобный строковый токен из Scriptlet.TypeLib и очищает его от разделителей.
+' @role: Session
+' @todo: При отсутствии Scriptlet.TypeLib рассмотреть альтернативу (Rnd+Time, крипто-библиотека).
     Dim s As String
     Dim i As Long
     Dim ch As String
@@ -757,6 +807,9 @@ End Function
 ' Дополнительные функции
 ' ================================================================
 Private Function GetWorkbookHost() As String
+' @desc: Возвращает имя компьютера-хоста (COMPUTERNAME) для записи в UserSessions.WorkbookHost.
+' @role: Session
+' @todo: При необходимости расширить до доменного имени/пользователя Windows.
     On Error Resume Next
     GetWorkbookHost = Environ("COMPUTERNAME")
     If Len(GetWorkbookHost) = 0 Then GetWorkbookHost = "UNKNOWN"
@@ -764,10 +817,16 @@ Private Function GetWorkbookHost() As String
 End Function
 
 Private Function SqlText(ByVal s As String) As String
+' @desc: Экранирует одинарные кавычки в строке для безопасной подстановки в SQL.
+' @role: SQL
+' @todo: Можно заменить на общий хелпер (Q/QuoteSql) для единообразия.
     SqlText = Replace$(s, "'", "''")
 End Function
 
 Public Sub SessionCleanupHistory()
+' @desc: Удаляет из истории старые завершённые/истёкшие/упавшие сессии старше суток.
+' @role: Session
+' @todo: Параметризовать период хранения истории через настройки, а не жёстко 1 день.
     Dim db As DAO.Database
     Dim sql As String
 
@@ -786,7 +845,6 @@ ExitPoint:
     If Not db Is Nothing Then db.Close
     Set db = Nothing
 End Sub
-
 ```
 
 ## Черновые заметки

@@ -301,26 +301,44 @@ if (rows.length === 0) {
 Option Explicit
 
 Private Sub LB_Nom_DblClick(ByVal Cancel As MSForms.ReturnBoolean)
+' @desc: При двойном клике по списку номенклатур открывает форму редактирования выбранной записи.
+' @role: UI
+' @todo: Убедиться, что ListIndex проверяется в Btn_Change_Click, чтобы избежать выхода за границы.
     Call Btn_Change_Click
 End Sub
 
 Private Sub LB_NomTypes_DblClick(ByVal Cancel As MSForms.ReturnBoolean)
+' @desc: При двойном клике по списку типов номенклатур открывает форму редактирования выбранного типа.
+' @role: UI
+' @todo: Логику всегда централизовать в Btn_Change_Click, как сейчас.
     Call Btn_Change_Click
 End Sub
 
 Private Sub LB_Roles_DblClick(ByVal Cancel As MSForms.ReturnBoolean)
+' @desc: При двойном клике по списку ролей открывает форму редактирования выбранной роли.
+' @role: UI
+' @todo: При большом количестве ролей можно добавить отдельную кнопку “Изменить”.
     Call Btn_Change_Click
 End Sub
 
 Private Sub LB_Services_DblClick(ByVal Cancel As MSForms.ReturnBoolean)
+' @desc: При двойном клике по списку служб открывает форму редактирования выбранной службы.
+' @role: UI
+' @todo: Следить за согласованностью индексов столбцов с источником данных.
     Call Btn_Change_Click
 End Sub
 
 Private Sub LB_Users_DblClick(ByVal Cancel As MSForms.ReturnBoolean)
+' @desc: При двойном клике по списку пользователей открывает форму редактирования выбранного пользователя.
+' @role: UI
+' @todo: При включённом поиске/фильтре убедиться, что данные в LB и в F_Change совпадают.
     Call Btn_Change_Click
 End Sub
 
 Private Sub Btn_Add_Click()
+' @desc: В зависимости от выбранного раздела (ID_table_lists) открывает форму F_Change в режиме добавления нужной сущности.
+' @role: UI
+' @todo: Повторяющуюся логику загрузки справочников (ролей, типов НМ) вынести в отдельные helper-процедуры.
     On Error GoTo EH
     Dim rs As DAO.Recordset
     Dim rowCount As Long
@@ -397,6 +415,9 @@ EH:
 End Sub
 
 Private Sub Btn_Change_Click()
+' @desc: Открывает F_Change в режиме изменения, заполняя её данными выбранной строки (роль, пользователь, тип НМ, НМ, служба).
+' @role: UI
+' @todo: Код сильно разветвлён; позже можно разбить отдельные кейсы (Roles/Users/NomTypes/Noms/Services) на отдельные процедуры.
     On Error GoTo EH
     Dim rs As DAO.Recordset
     Dim rowCount As Long
@@ -535,6 +556,9 @@ EH:
 End Sub
 
 Private Sub Btn_Delete_Click()
+' @desc: В зависимости от текущего раздела удаляет выбранную запись через соответствующий Safe-метод и обновляет список.
+' @role: UI
+' @todo: Для единообразия добавить обработчик EH и ShowError, как в Btn_Add/Btn_Change.
     On Error GoTo EH
     Select Case ID_table_lists
         Case 0:
@@ -581,14 +605,23 @@ Private Sub Btn_Delete_Click()
 End Sub
 
 Private Sub Btn_Cansel_Click()
+' @desc: Прячет форму списков без изменения данных.
+' @role: UI
+' @todo: Переименовать в Btn_Cancel_Click для единообразия в проекте.
     Me.Hide
 End Sub
 
 Private Sub UserForm_Initialize()
+' @desc: При создании формы вызывает PrepareForm для настройки вкладки и заполнения списков по текущему разделу.
+' @role: UI
+' @todo: Если PrepareForm кидает ошибку, она уже ловится внутри, так что здесь отдельный handler не нужен.
     Call PrepareForm
 End Sub
 
 Public Sub PrepareForm()
+' @desc: Настраивает внешний вид формы (MultiPage, размеры, заголовок) и заполняет нужный ListBox по ID_table_lists.
+' @role: UI
+' @todo: Вынести расчёт размеров и позиции кнопок в отдельный helper, чтобы не дублировать в других формах.
     On Error GoTo ErrRS
     MP_Change.Style = fmTabStyleNone
     MP_Change.Value = ID_table_lists
@@ -619,13 +652,14 @@ ErrRS:
 End Sub
 
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+' @desc: При закрытии по крестику не выгружает форму, а только скрывает её (Hide), чтобы сохранить состояние.
+' @role: UI
+' @todo: Если нужно очищать состояние между открытиями, добавить Reset-логику перед Hide.
     If CloseMode = vbFormControlMenu Then
         Cancel = True
         Me.Hide
     End If
 End Sub
-
-
 ```
 
 ## Черновые заметки

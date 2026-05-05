@@ -304,6 +304,9 @@ Private m_ButtonHandlers As Collection
 Private m_DynamicControlNames As Collection
 
 Private Sub ClearDynamicMenu()
+' @desc: Удаляет все ранее созданные динамические кнопки меню и заново инициализирует коллекции контролов и обработчиков.
+' @role: UI
+' @todo: При необходимости можно добавить проверку существования контрола через ControlExists перед Remove.
     Dim i As Long
     Dim ctrlName As String
     
@@ -327,6 +330,9 @@ Private Sub AddMenuButton(ByVal captionText As String, _
                           ByVal btnWidth As Single, _
                           ByVal btnHeight As Single, _
                           ByVal btnColor As Long)
+' @desc: Динамически создаёт кнопку меню, настраивает её внешний вид и привязывает обработчик CMenuButtonHandler.
+' @role: UI
+' @todo: Цвета и размеры позже лучше вынести в константы/тему оформления меню.
                           
     Dim Btn As MSForms.CommandButton
     Dim h As CMenuButtonHandler
@@ -359,6 +365,9 @@ Private Sub AddMenuButton(ByVal captionText As String, _
 End Sub
 
 Private Sub BuildRoleMenu()
+' @desc: Строит меню по текущей роли пользователя: показывает только разрешённые кнопки и автоматически пересчитывает размер формы.
+' @role: Navigation
+' @todo: Исправить строковый литерал цвета в fallback-кнопке logout и унифицировать цвета обычных/служебных кнопок.
     Const MARGIN_LEFT As Single = 12
     Const MARGIN_TOP As Single = 12
     Const BTN_WIDTH As Single = 180
@@ -405,6 +414,9 @@ EH:
 End Sub
 
 Private Function ControlExists(ByVal ctrlName As String) As Boolean
+' @desc: Проверяет, существует ли контрол с указанным именем на форме.
+' @role: UI
+' @todo: Сейчас в коде почти не используется; либо задействовать, либо удалить как лишний helper.
     Dim ctrl As Object
     On Error Resume Next
     Set ctrl = Me.Controls(ctrlName)
@@ -414,6 +426,9 @@ Private Function ControlExists(ByVal ctrlName As String) As Boolean
 End Function
 
 Private Sub UserForm_Initialize()
+' @desc: Инициализирует коллекции динамических элементов и строит меню по текущей роли пользователя.
+' @role: UI
+' @todo: При необходимости можно дополнительно устанавливать стартовый фокус на первую доступную кнопку.
     On Error GoTo ErrRS
     Set m_DynamicControlNames = New Collection
     Set m_ButtonHandlers = New Collection
@@ -425,17 +440,22 @@ ErrRS:
 End Sub
 
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+' @desc: При закрытии главного меню закрывает все дочерние пользовательские формы проекта.
+' @role: Navigation
+' @todo: При необходимости добавить SessionShutdown при закрытии главного меню через крестик.
     CloseChildForms Me
 End Sub
 
 Private Sub CloseChildForms(ByVal mainFrm As F_Menu)
+' @desc: Выгружает все открытые UserForm, кроме переданной главной формы меню.
+' @role: Navigation
+' @todo: Осторожно использовать, если появятся формы, которые нужно не выгружать, а скрывать.
     Dim i As Long
     
     For i = VBA.UserForms.Count - 1 To 0 Step -1
         If Not VBA.UserForms(i) Is mainFrm Then Unload VBA.UserForms(i)
     Next i
 End Sub
-
 ```
 
 ## Черновые заметки

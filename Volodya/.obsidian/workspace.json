@@ -87,16 +87,16 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10 Projects/Учёт ВВТ/Модули/ModUsers.md",
+                "file": "10 Projects/Учёт ВВТ/Формы/F_Menu.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "ModUsers"
+              "title": "F_Menu"
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 5
       }
     ],
     "direction": "vertical"
@@ -306,20 +306,26 @@
       "periodic-notes:Open today": false
     }
   },
-  "active": "85d565c743a63ac2",
+  "active": "3e77cf739225f256",
   "lastOpenFiles": [
+    "10 Projects/Учёт ВВТ/Формы/F_ListsDB.md",
+    "10 Projects/Учёт ВВТ/Формы/F_ChangeDB.md",
+    "10 Projects/Учёт ВВТ/Формы/F_Change.md",
+    "10 Projects/Учёт ВВТ/Модули/Mod_F_Change.md",
+    "10 Projects/Учёт ВВТ/Формы/F_Auth.md",
+    "10 Projects/Учёт ВВТ/Классы/CMenuButtonHandler.md",
+    "10 Projects/Учёт ВВТ/Учёт ВВТ.md",
+    "10 Projects/Учёт ВВТ/Модули/ModSettings.md",
+    "10 Projects/Учёт ВВТ/Модули/ModSession.md",
+    "10 Projects/Учёт ВВТ/Модули/ModServices.md",
     "10 Projects/Учёт ВВТ/Модули/ModUsers.md",
     "10 Projects/Учёт ВВТ/Модули/ModDictionaries.md",
-    "10 Projects/Учёт ВВТ/Учёт ВВТ.md",
-    "10 Projects/Учёт ВВТ/Модули/ModServices.md",
     "10 Projects/Учёт ВВТ/Модули/ModServiceUsersBuffer.md",
     "10 Projects/Учёт ВВТ/Модули/ModTools.md",
     "10 Projects/Учёт ВВТ/Модули/ModAudit.md",
-    "10 Projects/Учёт ВВТ/Модули/ModSession.md",
     "01 Dashboard/Персонаж.md",
     "30 Resources/VBA/Role sub or function.md",
     "20 Areas/Reading/Reading Dashboard.md",
-    "10 Projects/Учёт ВВТ/Классы/CMenuButtonHandler.md",
     "10 Projects/Учёт ВВТ/Модули/ModRoles.md",
     "10 Projects/Учёт ВВТ/Модули/ModNomenclatureTypes.md",
     "10 Projects/Учёт ВВТ/Модули/ModChangeRequests.md",
@@ -328,12 +334,6 @@
     "90 Templates/Reading/Author.md",
     "90 Templates/Reading/Book.md",
     "20 Areas/Reading/Books/Кубатура сферы.md",
-    "20 Areas/Reading/Authors/Тест.md",
-    "20 Areas/Reading/Books/Константа связи.md",
-    "20 Areas/Reading/Books/Красный сигнал.md",
-    "02 Profile/Skills/Reading.md",
-    "10 Projects/Учёт ВВТ/Модули/ModRef.md",
-    "20 Areas/Reading/Authors/Без названия.md",
     "90 Templates/Reading",
     "20 Areas/Reading/Authors",
     "20 Areas/Reading/Books",

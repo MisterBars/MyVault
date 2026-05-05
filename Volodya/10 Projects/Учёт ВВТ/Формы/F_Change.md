@@ -302,6 +302,9 @@ Option Explicit
 Public mIsDirty As Boolean
 
 Private Sub Btn_Add_Click()
+' @desc: В зависимости от ID_table_change вызывает нужную процедуру сохранения (роль, пользователь, тип НМ, НМ, служба).
+' @role: UI
+' @todo: Позже вынести выбор Save*-процедуры в отдельный модуль/функцию маршрутизации.
     On Error GoTo EH
     Select Case ID_table_change
         Case 0:
@@ -323,6 +326,9 @@ EH:
 End Sub
 
 Private Sub Btn_AddUS_Click()
+' @desc: Добавляет выбранного пользователя в список службы через буфер связей и обновляет списки слева/справа.
+' @role: UI
+' @todo: Проверить условие ListIndex < 1 — возможно, нужно использовать < 0 для стандартного ListBox.
     On Error GoTo EH
     Dim userID As Long
     Dim login As String
@@ -344,11 +350,17 @@ EH:
 End Sub
 
 Private Sub Btn_Cansel_Click()
+' @desc: Закрывает форму изменения, предварительно спрашивая подтверждение при наличии несохранённых изменений.
+' @role: UI
+' @todo: Привести имя кнопки/процедуры к Btn_Cancel_Click для единообразия.
     If Not ConfirmDiscardChanges() Then Exit Sub
     Me.Hide
 End Sub
 
 Private Sub Btn_DelUS_Click()
+' @desc: Удаляет пользователя из службы, если его права не заданы ролью, и обновляет списки.
+' @role: UI
+' @todo: Проверить индексы столбцов в LB_UserWService, чтобы не ломались при изменении источника данных.
 On Error GoTo EH
     Dim userID As Long
     Dim rightsByRole As Boolean
@@ -373,10 +385,16 @@ EH:
 End Sub
 
 Private Sub Btn_NewPwdGen_Click()
+' @desc: Генерирует простой пароль через надстройку Encrypt_VVT.xlam и подставляет его в поле пароля.
+' @role: UI
+' @todo: При необходимости дополнительно показывать пароль пользователю в отдельном окне/копировании.
     Me.TB_UserPwd.Text = Application.Run("'" & ADDIN_PATH & "Encrypt_VVT.xlam'!ModCrypt.GenerateSimplePassword")
 End Sub
 
 Private Sub Btn_USCanApprove_Click()
+' @desc: Переключает флаг “может утверждать” для связи пользователь-служба, если он не наследуется от роли.
+' @role: UI
+' @todo: Логику прав лучше централизовать в ModServiceUsersBuffer/ModServices, а форму оставить только потребителем.
     On Error GoTo EH
     Dim userID As Long
     Dim rightsByRole As Boolean
@@ -401,6 +419,9 @@ EH:
 End Sub
 
 Private Sub Btn_USCanEdit_Click()
+' @desc: Переключает флаг “может редактировать” для связи пользователь-служба, если он не наследуется от роли.
+' @role: UI
+' @todo: Аналогично Btn_USCanApprove_Click, минимизировать бизнес-логику в форме.
     On Error GoTo EH
     Dim userID As Long
     Dim rightsByRole As Boolean
@@ -425,23 +446,38 @@ EH:
 End Sub
 
 Private Sub CB_UserChangePwd_Change()
+' @desc: Включает или выключает поле ввода пароля в зависимости от флажка “сменить пароль”.
+' @role: UI
+' @todo: При изменении логики смены пароля убедиться, что состояние чекбокса используется во всех сценариях.
     TB_UserPwd.Enabled = CB_UserChangePwd.Value
     Lbl_UserPwd.Enabled = CB_UserChangePwd.Value
 End Sub
 
 Private Sub TB_UserPwd_Enter()
+' @desc: Временно показывает текст пароля при входе в поле (снимает маску PasswordChar).
+' @role: UI
+' @todo: Оценить риск безопасности показа пароля в открытом виде.
     Me.TB_UserPwd.PasswordChar = vbNullChar
 End Sub
 
 Private Sub TB_UserPwd_Exit(ByVal Cancel As MSForms.ReturnBoolean)
+' @desc: Возвращает маску символов пароля при выходе из поля.
+' @role: UI
+' @todo: При валидации пароля можно использовать Cancel, чтобы не покидать поле.
     Me.TB_UserPwd.PasswordChar = "*"
 End Sub
 
 Private Sub UserForm_Initialize()
+' @desc: Отключает вкладки у MultiPage, чтобы управление шло только через код и ID_table_change.
+' @role: UI
+' @todo: При необходимости настроить фокус/стартовую вкладку в зависимости от режима.
     Me.MP_Change.Style = fmTabStyleNone
 End Sub
 
 Public Sub PrepareFormForAdd()
+' @desc: Настраивает форму для режима добавления сущности (роль, пользователь, тип НМ, НМ, служба) и подгоняет размеры.
+' @role: UI
+' @todo: Вынести повторяющийся код вычисления размеров и позиционирования кнопок в отдельную процедуру.
     On Error GoTo EH
     Me.MP_Change.Value = ID_table_change
     Select Case ID_table_change
@@ -507,6 +543,9 @@ EH:
 End Sub
 
 Public Sub PrepareFormForChange()
+' @desc: Настраивает форму для режима изменения существующей записи (заголовки, состояния контролов, инициализация службы).
+' @role: UI
+' @todo: Аналогично PrepareFormForAdd, убрать дублирующуюся разметку в общую функцию.
     On Error GoTo EH
     Me.MP_Change.Value = ID_table_change
     Select Case ID_table_change
@@ -548,6 +587,9 @@ EH:
 End Sub
 
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+' @desc: Перехватывает закрытие формы по кресту, спрашивает подтверждение при несохранённых изменениях.
+' @role: UI
+' @todo: Упростить логику: достаточно Cancel=True и Me.Hide в случае отказа; сейчас Me.Hide вызывается только при Cancel=True.
     If CloseMode = vbFormControlMenu Then
         If Not ConfirmDiscardChanges() Then
             Cancel = True
@@ -557,6 +599,9 @@ Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
 End Sub
 
 Private Function IsMissingOrNull(ByVal v As Variant) As Boolean
+' @desc: Проверяет, является ли значение объектом Nothing, Null или пустой строкой.
+' @role: Helper
+' @todo: Удалить дубликат и использовать общую версию из ModTools.
     If IsObject(v) Then
         IsMissingOrNull = (v Is Nothing)
     ElseIf IsNull(v) Then
@@ -569,14 +614,23 @@ Private Function IsMissingOrNull(ByVal v As Variant) As Boolean
 End Function
 
 Public Sub MarkDirty()
+' @desc: Отмечает форму как имеющую несохранённые изменения.
+' @role: UI
+' @todo: Вызывать только в тех местах, где действительно меняются данные, уходящие в БД.
     mIsDirty = True
 End Sub
 
 Public Sub ResetDirty()
+' @desc: Сбрасывает признак несохранённых изменений (после успешного сохранения).
+' @role: UI
+' @todo: Убедиться, что все Save*-процедуры вызывают ResetDirty при успешной записи.
     mIsDirty = False
 End Sub
 
 Private Function ConfirmDiscardChanges() As Boolean
+' @desc: Спрашивает у пользователя, нужно ли отменять несохранённые изменения перед закрытием формы.
+' @role: UI
+' @todo: Заменить MsgBox на ShowWarning/ShowInfo для единообразия стиля сообщений.
     If Not mIsDirty Then
         ConfirmDiscardChanges = True
         Exit Function
@@ -587,7 +641,6 @@ Private Function ConfirmDiscardChanges() As Boolean
         vbQuestion + vbYesNo + vbDefaultButton2, _
         "Подтверждение") = vbYes)
 End Function
-
 ```
 
 ## Черновые заметки

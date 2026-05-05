@@ -304,10 +304,16 @@ Option Explicit
 Private Const msoFileDialogFilePicker As Long = 3
 
 Private Sub Btn_Cansel_Click()
+' @desc: Закрывает форму изменения путей к базе и документам без сохранения изменений.
+' @role: UI
+' @todo: Привести имя кнопки/процедуры к Btn_Cancel_Click для единообразия.
     Unload Me
 End Sub
 
 Private Sub Btn_Save_Click()
+' @desc: Сохраняет выбранные пути и режим Local/Server в ModSettings через ChangeConstantInModSettings и сохраняет книгу.
+' @role: Config
+' @todo: Добавить валидацию путей перед сохранением и сообщение об успешном завершении через ShowInfo.
     If OB_Local.Value = True Then
         Call ChangeConstantInModSettings("SRV_LOC", "False")
     Else
@@ -321,10 +327,16 @@ Private Sub Btn_Save_Click()
 End Sub
 
 Private Sub Btn_SelLoc_Click()
+' @desc: Открывает выбор файла локальной базы и подставляет путь в поле TB_Local.
+' @role: UI
+' @todo: Добавить проверку, что пользователь действительно выбрал .accdb.
     TB_Local.Text = SelectBase()
 End Sub
 
 Private Sub Btn_SelLocDoc_Click()
+' @desc: Открывает выбор папки локальных документов и подставляет её путь в TB_LocDoc.
+' @role: UI
+' @todo: Нормализовать добавление "\" в конце пути через отдельный helper.
     Dim DocPath As String
     
     DocPath = SelectFolderPath(Replace(LOCAL_BASE, "vvt_db.accdb", ""))
@@ -335,10 +347,16 @@ Private Sub Btn_SelLocDoc_Click()
 End Sub
 
 Private Sub Btn_SelServ_Click()
+' @desc: Открывает выбор файла серверной базы и подставляет путь в поле TB_Server.
+' @role: UI
+' @todo: Добавить проверку доступности сетевого пути до сохранения.
     TB_Server.Text = SelectBase()
 End Sub
 
 Private Sub Btn_SelServDoc_Click()
+' @desc: Открывает выбор папки серверных документов и подставляет её путь в TB_ServDoc.
+' @role: UI
+' @todo: Аналогично локальному пути, лучше вынести добавление "\" в отдельную функцию.
     Dim DocPath As String
     
     DocPath = SelectFolderPath(Replace(SERVER_BASE, "vvt_db.accdb", ""))
@@ -349,6 +367,9 @@ Private Sub Btn_SelServDoc_Click()
 End Sub
 
 Private Sub UserForm_Initialize()
+' @desc: Инициализирует форму настройки путей, подставляет текущие значения ModSettings и отмечает активный режим Local/Server.
+' @role: UI
+' @todo: После инициализации можно отключать неактуальные поля в зависимости от выбранного режима.
     On Error GoTo EH
 
     If CBool(SRV_LOC) Then
@@ -368,6 +389,9 @@ EH:
 End Sub
 
 Private Function SelectBase() As String
+' @desc: Показывает диалог выбора файла Access и возвращает путь к выбранной базе данных.
+' @role: UI
+' @todo: Добавить On Error GoTo EH и ShowError на случай проблем с FileDialog.
     Dim fd As Object
     Dim res As Long
 
@@ -392,6 +416,9 @@ Private Function SelectBase() As String
 End Function
 
 Function SelectFolderPath(Optional ByVal InitialPath As String = "") As String
+' @desc: Показывает диалог выбора папки и возвращает путь к каталогу документов.
+' @role: UI
+' @todo: Добавить обработчик ошибок и Set fd = Nothing в конце процедуры.
     Dim fd As FileDialog
     Dim res As Long
 
@@ -414,7 +441,6 @@ Function SelectFolderPath(Optional ByVal InitialPath As String = "") As String
         End If
     End With
 End Function
-
 ```
 
 ## Черновые заметки

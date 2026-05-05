@@ -293,6 +293,10 @@ Public WithEvents Btn As MSForms.CommandButton
 Public actionKey As String
 
 Private Sub Btn_Click()
+' @desc: Обрабатывает нажатие кнопки меню, выбирает нужный раздел или выполняет выход из системы.
+' @role: Navigation
+' @todo: Вынести mapping actionKey -> ID_table_lists в отдельную функцию, чтобы упростить поддержку меню.
+End Sub
     On Error GoTo EH
     
     Select Case actionKey

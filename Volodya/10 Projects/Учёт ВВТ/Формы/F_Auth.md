@@ -301,6 +301,9 @@ if (rows.length === 0) {
 Option Explicit
 
 Private Sub Btn_Add_Click()
+' @desc: Проверяет логин и пароль пользователя, запускает сессию и закрывает форму авторизации при успешном входе.
+' @role: Auth
+' @todo: Убрать неиспользуемые переменные sql/Check_login/userID/roleID/userLogin и добавить ShowError в обработчик ошибок.
     Dim sql As String
     Dim Check_login As Boolean
     Dim userID As Long
@@ -317,10 +320,16 @@ End Sub
 
 
 Private Sub Btn_Cansel_Click()
+' @desc: Закрывает форму авторизации без выполнения входа в систему.
+' @role: UI
+' @todo: Если закрытие формы должно завершать приложение, лучше сделать это явно.
     Unload Me
 End Sub
 
 Private Sub UserForm_Initialize()
+' @desc: Инициализирует форму авторизации и задаёт её заголовок при открытии.
+' @role: UI
+' @todo: Пустой обработчик ErrRS заменить на ShowError("F_Auth.UserForm_Initialize", Err.Number, Err.Description).
     On Error GoTo ErrRS
     F_Auth.Caption = "Авторизация"
 ErrRS:
