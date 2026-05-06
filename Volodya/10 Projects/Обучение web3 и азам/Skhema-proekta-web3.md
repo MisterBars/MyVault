@@ -123,18 +123,26 @@ tags:
 
 ## Минимальная структура папок
 ```text
-web3/
-  web3.md
-  Skhema-proekta-web3.md
-  Progress-obucheniia.md
+Volodya/
+  10 Projects/
+	web3/
+	  web3.md
+	  Skhema-proekta-web3.md
+	  Progress-obucheniia.md
+	  Modules/
+	  Tasks/
+	  Artifacts/
+	  Sessions/
+	  Checkpoints/
+	  Resources/
 
-  Modules/
-  Skills/
-  Tasks/
-  Artifacts/
-  Sessions/
-  Checkpoints/
-  Resources/
+Volodya/
+  02 Profile/
+    Skills/
+      Solidity-2.md
+      TypeScript.md
+      React.md
+      Hardhat.md
 ```
 
 ## Замечания

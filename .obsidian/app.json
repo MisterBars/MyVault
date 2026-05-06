@@ -4,5 +4,6 @@
   "newFileLocation": "folder",
   "newFileFolderPath": "Volodya/00 Inbox",
   "attachmentFolderPath": "Volodya/00 Inbox",
-  "readableLineLength": true
+  "readableLineLength": true,
+  "alwaysUpdateLinks": true
 }
