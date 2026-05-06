@@ -20,6 +20,13 @@
         "a": 1,
         "rgb": 327424
       }
+    },
+    {
+      "query": "Reading",
+      "color": {
+        "a": 1,
+        "rgb": 5526240
+      }
     }
   ],
   "collapse-display": false,
@@ -32,6 +39,6 @@
   "repelStrength": 10,
   "linkStrength": 1,
   "linkDistance": 250,
-  "scale": 0.5213789501291425,
+  "scale": 0.3495520710511933,
   "close": true
 }
