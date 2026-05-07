@@ -301,11 +301,14 @@
       "templater-obsidian:Templater": false,
       "table-editor-obsidian:Advanced Tables Toolbar": false,
       "obsidian-git:Open Git source control": false,
-      "obsidian-kanban:Create new board": false
+      "obsidian-kanban:Create new board": false,
+      "periodic-notes:Open today": false
     }
   },
   "active": "9201b4f177e38303",
   "lastOpenFiles": [
+    "10 Projects/Обучение web3 и азам/Skhema-proekta-web3.md",
+    "02 Profile/Skills/Solidity.md",
     "20 Areas/Reading/Books/Часодеи. Часовая битва.md",
     "20 Areas/Reading/Books/Часодеи. Часограмма.md",
     "20 Areas/Reading/Books/Часодеи. Часовой ключ.md",
@@ -330,8 +333,6 @@
     "10 Projects/Учёт ВВТ/Учёт ВВТ.md",
     "20 Areas/Reading/Books/Скидбладнир. Башня Богов.md",
     "20 Areas/Reading/Books/Скидбладнир. Золото и чешуя.md",
-    "20 Areas/Reading/Books/Скидбладнир. Дорога во Мрак.md",
-    "20 Areas/Reading/Books/Скидбладнир. Тени великих.md",
     "10 Projects/Учёт ВВТ/Таблицы БД",
     "20 Areas/Разработка/Учёт ВВТ/F_Change-1777997947304.webp",
     "20 Areas/Разработка/Учёт ВВТ/F_Change-1777998028877.webp",
