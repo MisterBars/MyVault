@@ -1,0 +1,628 @@
+---
+type: module
+status: done
+done_date: 2026-05-02
+project: "[[Учёт ВВТ]]"
+skill: vba
+tags:
+  - module
+  - skill/vba
+reward_xp: 50
+---
+# Модуль
+## Назначение
+
+## Важные решения
+
+- Почему выбрана такая архитектура.
+- Комментарии по производительности/ограничениям.
+
+## Задачи по модулю
+```dataview
+TABLE status as "Статус", task_type as "Тип", deadline as "Срок"
+FROM ""
+WHERE type = "task" AND project = this.project AND contains(file.outlinks, this.file.link)
+SORT deadline ASC
+```
+
+## Взаимосвязи (исходящие вызовы)
+```dataviewjs
+const TYPES = ['module', 'form', 'class'];
+
+const current = dv.current();
+const currentProject = current.project;
+
+if (!currentProject) {
+  dv.paragraph('У текущего модуля не заполнено поле project — нечего сканировать.');
+  return;
+}
+
+const allPages = dv.pages()
+  .where(p => TYPES.includes(p.type))
+  .where(p => p.project && dv.func.contains(p.project, currentProject))
+  .array();
+
+// Диагностика — сохраняем, но не показываем
+const debugModulesCount = allPages.length;
+
+async function getVbaBlocks(path) {
+  const text = await dv.io.load(path);
+  if (!text) return [];
+
+  const blocks = [];
+  let inBlock = false;
+  let currentBlock = [];
+
+  for (const line of text.split('\n')) {
+    const trimmed = line.trim();
+
+    if (!inBlock && trimmed.toLowerCase().startsWith('```vba')) {
+      inBlock = true;
+      currentBlock = [];
+      continue;
+    }
+
+    if (inBlock && trimmed.startsWith('```')) {
+      inBlock = false;
+      blocks.push(currentBlock.join('\n'));
+      currentBlock = [];
+      continue;
+    }
+
+    if (inBlock) currentBlock.push(line);
+  }
+
+  return blocks;
+}
+
+const reProcDecl = /^\s*(?:(Public|Private)\s+)?(?:Static\s+)?(Sub|Function)\s+([A-Za-z0-9_]+)/i;
+const procIndex = {};
+
+for (const page of allPages) {
+  const vbaBlocks = await getVbaBlocks(page.file.path);
+
+  for (const block of vbaBlocks) {
+    const lines = block.split('\n');
+
+    for (const line of lines) {
+      const m = line.match(reProcDecl);
+      if (!m) continue;
+
+      const name = m[3];
+
+      if (!procIndex[name]) procIndex[name] = [];
+      procIndex[name].push({
+        modulePath: page.file.path,
+        moduleLink: page.file.link,
+        moduleType: page.type
+      });
+    }
+  }
+}
+
+// Диагностика — сохраняем, но не показываем
+const debugProcNames = Object.keys(procIndex);
+const debugProcCount = debugProcNames.length;
+
+const currentBlocks = await getVbaBlocks(current.file.path);
+
+// будем искать вызовы более аккуратно:
+// 1) Call Name ...
+// 2) Name(...)
+// 3) Name <что-то>, но не Name =, не Dim Name, не Set Name =
+const reCallPattern = /\b(?:Call\s+)?([A-Za-z_][A-Za-z0-9_]*)\b/g;
+
+const callMap = new Map();
+
+for (const block of currentBlocks) {
+  const lines = block.split('\n');
+  let currentProc = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    if (trimmed.startsWith("'")) continue;
+
+    const declMatch = line.match(reProcDecl);
+    if (declMatch) {
+      currentProc = declMatch[3];
+      continue;
+    }
+
+    if (!currentProc) continue;
+
+    // Не считать строки, где имя функции слева от "=":
+    //   FuncName = ...
+    //   Set obj = ...
+    //   Dim FuncName As ...
+    // Обработаем это внутри цикла по совпадениям.
+
+    let m;
+    while ((m = reCallPattern.exec(line)) !== null) {
+      const calledName = m[1];
+
+      // Позиция найденного имени в строке
+      const idx = m.index;
+
+      // Левая часть строки до имени
+      const before = line.slice(0, idx);
+      const after = line.slice(idx + calledName.length);
+
+      const beforeTrim = before.trim();
+      const afterTrim = after.trimStart();
+
+      // 1) Если это присваивание результата функции: "FuncName = ..."
+      //    — имя стоит в начале строки / после пробелов, а сразу после него "="
+      const isAssignmentResult =
+        beforeTrim === "" && afterTrim.startsWith("=");
+
+      if (isAssignmentResult) {
+        // Это возврат из функции, НЕ вызов
+        continue;
+      }
+
+      // 2) Если это объявление переменной: "Dim FuncName As ..."
+      if (/^\s*Dim\s+$/i.test(before) || /^\s*Dim\s+/i.test(beforeTrim)) {
+        continue;
+      }
+
+      // 3) Если это левая часть Set: "Set obj = ..."
+      //    — нас интересуют вызовы, а не имя слева от Set/=
+      if (/^\s*Set\s+$/i.test(before) || /^\s*Set\s+/i.test(beforeTrim)) {
+        continue;
+      }
+
+      // 4) Если после имени нет "(", нет пробела + аргументов, и нет "Call",
+      //    можно попасть в кучу ложных срабатываний. Но:
+      //    - уже отсекли очевидные присваивания и Dim/Set.
+      //    - оставим это как потенциальный вызов (вызов без скобок: Name arg1, arg2).
+      //    При желании можно ещё проверить, что после имени не конец строки и не оператор.
+
+      const targets = procIndex[calledName];
+      if (!targets) continue;
+
+      for (const t of targets) {
+        // не считаем самовызов внутри того же модуля той же процедуры
+        if (t.modulePath === current.file.path && calledName === currentProc) continue;
+
+        const key = `${currentProc}||${t.modulePath}`;
+        if (!callMap.has(key)) {
+          callMap.set(key, {
+            fromProc: currentProc,
+            toModuleLink: t.moduleLink,
+            calledNames: new Set()
+          });
+        }
+
+        callMap.get(key).calledNames.add(calledName);
+      }
+    }
+  }
+}
+
+const rows = [];
+for (const entry of callMap.values()) {
+  const calledList = Array.from(entry.calledNames).sort().join(", ");
+  rows.push([
+    entry.fromProc,
+    entry.toModuleLink,
+    calledList
+  ]);
+}
+
+if (rows.length === 0) {
+  dv.paragraph('Исходящих вызовов других модулей/форм/классов в рамках этого проекта не найдено.');
+} else {
+  dv.table(
+    ['Процедура', 'Куда (модуль)', 'Что вызывает'],
+    rows
+  );
+}
+```
+
+# Функции и процедуры
+```dataviewjs
+const page = dv.current();
+const text = await dv.io.load(page.file.path);
+
+const vbaBlocks = [];
+let inBlock = false;
+let current = [];
+
+for (const line of text.split("\n")) {
+  if (line.trim().startsWith("```vba")) {
+    inBlock = true;
+    current = [];
+    continue;
+  }
+
+  if (inBlock && line.trim().startsWith("```")) {
+    inBlock = false;
+    vbaBlocks.push(current.join("\n"));
+    current = [];
+    continue;
+  }
+
+  if (inBlock) current.push(line);
+}
+
+const reDecl = /^\s*(?:(Public|Private)\s+)?(?:Static\s+)?(Sub|Function)\s+([A-Za-z0-9_]+)/i;
+const reReturnType = /\)\s*As\s+([A-Za-z0-9_\.]+)/i;
+const reTag = /^'\s*@([a-zA-Z0-9_]+):\s*(.+)$/i;
+
+const rows = [];
+
+for (const block of vbaBlocks) {
+  const lines = block.split("\n");
+
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(reDecl);
+    if (!m) continue;
+
+    const scopeRaw = m[1];
+    const kindRaw = m[2];
+    const name = m[3];
+
+    const kindLower = String(kindRaw ?? "").toLowerCase();
+    const kind = kindLower === "sub" ? "Процедура" : "Функция";
+    const scope = scopeRaw ? String(scopeRaw) : "По умолчанию (Public)";
+
+    let j = i;
+    while (j < lines.length - 1 && lines[j].trim().endsWith("_")) {
+      j++;
+    }
+
+    const signatureLines = lines.slice(i, j + 1);
+    const signatureText = signatureLines.join(" ");
+    const mReturn = signatureText.match(reReturnType);
+    const returnType = kind === "Функция" && mReturn ? String(mReturn[1]) : "";
+
+    const tags = {
+      desc: "",
+      role: "",
+      todo: ""
+    };
+
+    let k = j + 1;
+
+    while (k < lines.length) {
+      const cur = lines[k].trim();
+
+      if (cur === "") {
+        k++;
+        continue;
+      }
+
+      const tagMatch = cur.match(reTag);
+      if (!tagMatch) break;
+
+      const tagName = String(tagMatch[1] ?? "").toLowerCase();
+      const tagValue = String(tagMatch[2] ?? "").trim();
+
+      if (Object.prototype.hasOwnProperty.call(tags, tagName)) {
+        tags[tagName] = tagValue;
+      }
+
+      k++;
+    }
+
+    rows.push([
+      name,
+      kind,
+      scope,
+      returnType,
+      tags.desc,
+      tags.role,
+      tags.todo
+    ]);
+  }
+}
+
+if (rows.length === 0) {
+  dv.paragraph("Процедуры и функции в коде не найдены.");
+} else {
+  dv.table(
+    ["Имя", "Тип", "Область", "Возврат", "Описание", "Роль", "TODO"],
+    rows
+  );
+}
+```
+# Код
+```vba
+' @desc: **что делает конкретно эта процедура**
+' @role: **какое место она занимает в системе**
+' @todo: **заметка по процедуре/функции**
+
+
+Option Explicit
+
+' Функция изменения значений констант
+' Для числовых констант
+'       ChangeConstantInModSettings "MAX_COUNT", 100
+' Для строковых констант
+'       ChangeConstantInModSettings "DEFAULT_NAME", "Новое значение"
+' Для дат
+'       ChangeConstantInModSettings "START_DATE", #12/31/2023#
+' Для булевых значений
+'       ChangeConstantInModSettings "ENABLE_FEATURE", True
+Sub ChangeConstantInModSettings(constantName As String, newValue As Variant)
+' @desc: Находит константу в модуле ModSettings и заменяет её значение в исходном коде VBA.
+' @role: Config
+' @todo: Добавить выход после успешной замены и сообщение, если константа не найдена.
+    On Error GoTo ErrorHandler
+    
+    ' Получаем доступ к VBProject через CreateObject
+    Dim vbProj As Object
+    Set vbProj = ThisWorkbook.VBProject
+    
+    Dim vbComp As Object
+    Dim codeMod As Object
+    Dim i As Long
+    Dim lineText As String
+    Dim Found As Boolean
+    Dim constLine As Long
+    Dim constType As String
+    Dim oldValue As String
+    
+    ' Ищем модуль ModSettings
+    For Each vbComp In vbProj.VBComponents
+        If vbComp.name = "ModSettings" Then
+            Set codeMod = vbComp.CodeModule
+            
+            ' Ищем константу в коде модуля
+            For i = 1 To codeMod.CountOfLines
+                lineText = codeMod.Lines(i, 1)
+                
+                ' Проверяем, является ли строка объявлением константы
+                If InStr(1, lineText, "Const " & constantName & " ", vbTextCompare) > 0 Then
+                    constLine = i
+                    
+                    ' Определяем тип константы
+                    If InStr(lineText, " As ") > 0 Then
+                        constType = Split(Split(lineText, " As ")(1), " ")(0)
+                        constType = Replace(constType, "=", "")
+                        constType = Trim(constType)
+                    Else
+                        constType = "Variant"
+                    End If
+                    
+                    ' Извлекаем текущее значение
+                    oldValue = Split(Split(lineText, "=")(1), "'")(0)
+                    oldValue = Trim(oldValue)
+                    
+                    ' Форматируем новое значение в зависимости от типа
+                    Dim formattedValue As String
+                    Select Case LCase(constType)
+                        Case "string", "str"
+                            formattedValue = """" & CStr(newValue) & """"
+                        Case "integer", "long", "byte", "boolean"
+                            formattedValue = CStr(newValue)
+                        Case "single", "double", "currency", "decimal"
+                            formattedValue = Replace(CStr(newValue), ",", ".")
+'                        Case "date"
+'                            formattedValue = "#" & Format(newValue, "yyyy-mm-dd hh:mm:ss") & "#"
+                        Case Else
+                            formattedValue = CStr(newValue)
+                    End Select
+                    
+                    ' Заменяем строку с константой
+                    Dim newLine As String
+                    newLine = Left(lineText, InStr(lineText, "=")) & " " & formattedValue
+                    
+                    ' Сохраняем комментарий, если он есть
+                    If InStr(lineText, "'") > InStr(lineText, "=") Then
+                        newLine = newLine & " " & Mid(lineText, InStr(lineText, "'"))
+                    End If
+                    
+                    codeMod.ReplaceLine constLine, newLine
+                    Found = True
+                    Exit For
+                End If
+            Next i
+            
+            Exit For
+        End If
+    Next vbComp
+    set Found = Nothing
+    exit sub
+ErrorHandler:
+    ShowError "ChangeConstantInModSettings", Err.Number, Err.description
+End Sub
+
+Public Function Q(ByVal s As String) As String
+' @desc: Экранирует строку для SQL и оборачивает её в одинарные кавычки.
+' @role: SQL
+' @todo: Использовать для текстовых SQL-параметров только вместе с проверкой на Null.
+    Q = "'" & Replace$(NzStr(s), "'", "''") & "'"
+End Function
+
+Public Function NzStr(ByVal v As Variant, Optional ByVal defaultValue As String = "") As String
+' @desc: Возвращает строковое значение Variant либо значение по умолчанию при Null/Empty.
+' @role: Helper
+' @todo: При необходимости добавить обработку Error-значений Excel.
+    If IsNull(v) Or IsEmpty(v) Then
+        NzStr = defaultValue
+    Else
+        NzStr = CStr(v)
+    End If
+End Function
+
+Public Function NzLng(ByVal v As Variant, Optional ByVal defaultValue As Long = 0) As Long
+' @desc: Возвращает числовое Long-значение Variant либо значение по умолчанию при Null/Empty.
+' @role: Helper
+' @todo: Добавить безопасную проверку IsNumeric перед CLng.
+    If IsNull(v) Or IsEmpty(v) Or v = "" Then
+        NzLng = defaultValue
+    Else
+        NzLng = CLng(v)
+    End If
+End Function
+
+Public Function NzDate(ByVal v As Variant, Optional ByVal def As Date = 0) As Date
+' @desc: Возвращает значение даты из Variant либо дату по умолчанию при Null/Empty.
+' @role: Helper
+' @todo: Добавить безопасную проверку IsDate перед CDate.
+    If IsNull(v) Or IsEmpty(v) Or v = "" Then
+        NzDate = def
+    Else
+        NzDate = CDate(v)
+    End If
+End Function
+
+Public Function NzBool(ByVal v As Variant, Optional ByVal defaultValue As Boolean = False) As Boolean
+' @desc: Возвращает логическое значение из Variant либо значение по умолчанию при Null/Empty.
+' @role: Helper
+' @todo: При необходимости расширить обработку строковых значений True/False и 0/1.
+    If IsNull(v) Or IsEmpty(v) Or v = "" Then
+        NzBool = defaultValue
+    Else
+        NzBool = CBool(v)
+    End If
+End Function
+
+Public Function BoolToText(ByVal b As Boolean) As String
+' @desc: Преобразует Boolean в текстовое значение "True" или "False".
+' @role: Formatting
+' @todo: Если потребуется UI-локализация, вернуть "Да/Нет" отдельной функцией.
+    If b Then BoolToText = "True" Else BoolToText = "False"
+End Function
+
+Public Function QuoteSql(ByVal s As Variant) As String
+' @desc: Возвращает SQL-представление текстового значения или NULL для пустого Variant.
+' @role: SQL
+' @todo: По смыслу дублирует Q, позже можно оставить одну функцию.
+    If IsNull(s) Or IsEmpty(s) Then
+        QuoteSql = "NULL"
+    Else
+        Dim txt As String
+        txt = CStr(s)
+        txt = Replace(txt, "'", "''")
+        QuoteSql = "'" & txt & "'"
+    End If
+End Function
+
+Public Function IsMissingOrNull(ByVal v As Variant) As Boolean
+' @desc: Проверяет, является ли значение пустым, Null, Nothing или пустой строкой.
+' @role: Helper
+' @todo: Название вводит в заблуждение, так как IsMissing для обычного Variant здесь не используется.
+    If IsObject(v) Then
+        IsMissingOrNull = (v Is Nothing)
+    ElseIf IsNull(v) Then
+        IsMissingOrNull = True
+    ElseIf VarType(v) = vbString Then
+        IsMissingOrNull = (Trim$(CStr(v)) = "")
+    Else
+        IsMissingOrNull = False
+    End If
+End Function
+
+Public Function Transpose2D(ByVal src As Variant) As Variant
+' @desc: Транспонирует двумерный массив, меняя местами строки и столбцы.
+' @role: Helper
+' @todo: Добавить обработку одномерных массивов и защиту от некорректной размерности.
+    Dim r1 As Long, r2 As Long
+    Dim c1 As Long, c2 As Long
+    Dim r As Long, c As Long
+    Dim dst As Variant
+    
+    If Not IsArray(src) Then
+        Transpose2D = src
+        Exit Function
+    End If
+    
+    r1 = LBound(src, 1)
+    r2 = UBound(src, 1)
+    c1 = LBound(src, 2)
+    c2 = UBound(src, 2)
+    
+    ReDim dst(c1 To c2, r1 To r2)
+    
+    For r = r1 To r2
+        For c = c1 To c2
+            dst(c, r) = src(r, c)
+        Next c
+    Next r
+    Transpose2D = dst
+End Function
+
+Public Function BoolToSql(ByVal v As Boolean) As String
+' @desc: Преобразует Boolean в SQL-совместимое текстовое значение True или False.
+' @role: SQL
+' @todo: Использовать единообразно во всех SQL-выражениях с Yes/No полями.
+    If v Then
+        BoolToSql = "True"
+    Else
+        BoolToSql = "False"
+    End If
+End Function
+
+Public Sub ShowError(ByVal procName As String, _
+                     Optional ByVal ErrNum As Long = 0, _
+                     Optional ByVal ErrDesc As String = "", _
+                     Optional ByVal ExtraInfo As String = "")
+' @desc: Показывает пользователю унифицированное окно ошибки с именем процедуры и деталями.
+' @role: ErrorHandling
+' @todo: Позже можно добавить логирование ошибки в AuditLog или отдельный журнал ошибок.
+                     
+    Dim s As String
+    
+    If ErrNum = 0 Then ErrNum = Err.Number
+    If LenB(ErrDesc) = 0 Then ErrDesc = Err.description
+    
+    s = "Ошибка в процедуре: " & procName & vbCrLf & _
+        "Код ошибки: " & CStr(ErrNum) & vbCrLf & _
+        "Описание: " & ErrDesc
+    
+    If LenB(ExtraInfo) > 0 Then
+        s = s & vbCrLf & vbCrLf & "Дополнительно: " & vbCrLf & ExtraInfo
+    End If
+    s = s & vbCrLf & "Пожалуйста пометьте и передайте разработчику!"
+    
+    MsgBox s, vbCritical, "Ошибка!"
+End Sub
+
+Public Sub ShowWarning(ByVal MsgText As String, Optional ByVal Title As String = "Предупреждение")
+' @desc: Показывает пользователю предупреждающее сообщение в едином стиле проекта.
+' @role: UI
+' @todo: Использовать для валидации и бизнес-ограничений вместо обычного MsgBox.
+    MsgBox MsgText, vbExclamation, Title
+End Sub
+
+Public Sub ShowInfo(ByVal MsgText As String, Optional ByVal Title As String = "Информация")
+' @desc: Показывает пользователю информационное сообщение в едином стиле проекта.
+' @role: UI
+' @todo: Использовать для успешных операций и служебных уведомлений.
+    MsgBox MsgText, vbInformation, Title
+End Sub
+
+' ==============================================
+' DB helpers
+' ==============================================
+Public Function GetDbPath() As String
+' @desc: Возвращает путь к текущей рабочей базе данных в зависимости от режима Local/Server.
+' @role: Config
+' @todo: При необходимости добавить проверку существования файла базы.
+    If SRV_LOC = False Then
+        GetDbPath = LOCAL_BASE
+    Else
+        GetDbPath = SERVER_BASE
+    End If
+End Function
+
+Public Function OpenCurrentDb() As DAO.Database
+' @desc: Открывает текущую базу данных Access по пути из настроек и возвращает объект DAO.Database.
+' @role: DB
+' @todo: При массовом использовании следить за корректным закрытием внешних объектов Database.
+    Set OpenCurrentDb = DBEngine.Workspaces(0).OpenDatabase(GetDbPath())
+End Function
+
+Public Function OpenWorkspace() As DAO.Workspace
+' @desc: Возвращает текущий DAO.Workspace для работы с транзакциями.
+' @role: DB
+' @todo: Использовать единообразно во всех CRUD-процедурах с BeginTrans/CommitTrans/Rollback.
+    Set OpenWorkspace = DBEngine.Workspaces(0)
+End Function
+```
+
+## Черновые заметки
+
