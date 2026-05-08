@@ -46,7 +46,7 @@ const project = dv.current();
 
 const items = dv.pages()
   .where(p => p.project && p.project.path === project.file.path)
-  .where(p => ["module","skill","task","artifact","checkpoint","study-session"].includes(p.type))
+  .where(p => ["module", "skill", "task", "artifact", "checkpoint", "study-session"].includes(String(p.type || "").toLowerCase()))
   .array();
 
 const modules = items.filter(p => p.type === "module");
@@ -112,14 +112,18 @@ function statCard(title, value) {
     background: var(--background-primary);
     border-radius: 8px;
     border: 1px solid var(--background-modifier-border);
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    gap:4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
   `;
-  dv.el("div", title, { container: card }).style.cssText = "font-size:0.75em;color:var(--text-muted);text-align:center;";
-  dv.el("div", String(value), { container: card }).style.cssText = "font-size:1.2em;font-weight:600;color:var(--text-normal);text-align:center;";
+
+  dv.el("div", title, { container: card }).style.cssText =
+    "font-size:0.75em;color:var(--text-muted);text-align:center;";
+
+  dv.el("div", String(value), { container: card }).style.cssText =
+    "font-size:1.2em;font-weight:600;color:var(--text-normal);text-align:center;";
 }
 
 statCard("Модулей", modules.length);
