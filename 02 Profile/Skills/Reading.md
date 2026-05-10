@@ -5,3 +5,4 @@ title: Reading
 tags:
   - skill/reading
 ---
+[[Макс Фрай]]

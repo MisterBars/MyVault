@@ -18,14 +18,14 @@
       "query": "web3",
       "color": {
         "a": 1,
-        "rgb": 327424
+        "rgb": 1966335
       }
     },
     {
       "query": "Reading",
       "color": {
         "a": 1,
-        "rgb": 5526240
+        "rgb": 5431401
       }
     }
   ],
@@ -39,6 +39,6 @@
   "repelStrength": 10,
   "linkStrength": 1,
   "linkDistance": 250,
-  "scale": 0.34955207105119246,
+  "scale": 0.34955207105119135,
   "close": true
 }
