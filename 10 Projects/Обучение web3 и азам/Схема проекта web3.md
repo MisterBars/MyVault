@@ -33,7 +33,7 @@ tags:
 
 | Тип                 | Назначение                   | Пример                    |
 | ------------------- | ---------------------------- | ------------------------- |
-| `project`           | Верхний уровень направления  | `[[web3]]                 |
+| `project`           | Верхний уровень направления  | `[[web3]]`                |
 | `learning-schema`   | Документ структуры и правил  | `[[Схема проекта web3]]`  |
 | `learning-progress` | Текущий прогресс и состояние | `[[Прогресс обучения]]`   |
 | `module`            | Учебный модуль               | `[[Solidity basics]]`     |
@@ -123,28 +123,20 @@ tags:
 
 ## Минимальная структура папок
 ```text
-Volodya/
-  10 Projects/
-	web3/
-	  web3.md
-	  Skhema-proekta-web3.md
-	  Progress-obucheniia.md
-	  Modules/
-	  Tasks/
-	  Artifacts/
-	  Sessions/
-	  Checkpoints/
-	  Resources/
+web3/
+  web3.md
+  Skhema-proekta-web3.md
+  Progress-obucheniia.md
 
-Volodya/
-  02 Profile/
-    Skills/
-      Solidity-2.md
-      TypeScript.md
-      React.md
-      Hardhat.md
+  Modules/
+  Skills/
+  Tasks/
+  Artifacts/
+  Sessions/
+  Checkpoints/
+  Resources/
 ```
-<p align="justify">Навыки являются глобальными сущностями vault и не дублируются внутри проекта. Проектные карточки используют ссылки на них через поле skill в формате skill_id.</p>
+
 ## Замечания
 - Главная сущность в учебном проекте — модуль, а не файл с теорией.
 - Если заметка не помогает принять решение “что делать дальше”, она должна быть либо упрощена, либо связана с задачей.
