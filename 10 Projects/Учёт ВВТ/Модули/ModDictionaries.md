@@ -327,29 +327,24 @@ if (rows.length === 0) {
 
 ## Код
 ```vba
-' @desc: Управление простыми справочниками (CRUD) + часть сложных (ответственные, локации)
-' @role: Data Access / Dictionaries
-' @todo: При необходимости расширить поля для ResponsiblePersons/Locations
+' @desc: **что делает конкретно эта процедура**
+' @role: **какое место она занимает в системе(Audit/UI/Navigation и т.д.)**
+' @todo: **заметка по процедуре/функции**
 
 Option Explicit
 
 '==================================================
-' ModDictionaries v2
+' ModDictionaries v1
 ' Простые справочники:
-' - Manufacturers
+' - Manufacturies
 ' - Categories
 ' - ExploitationTypes
 ' - ProductStatuses
 ' - DocumentTypes
 '
-' Справочники со сложной структурой (ядро):
-' - ResponsiblePersons (пока только ID+FullName для общего UI)
-' - Locations (пока только ID+LocationName для общего UI)
-'
 ' Требует:
 ' - ModTools: NzStr, NzLng, Q, ShowError, ShowWarning, ShowInfo, OpenCurrentDb, OpenWorkspace
 ' - ModAudit: WriteAuditEvent
-' - ModSession: g_CurrentUserID
 '==================================================
 
 Public Enum SimpleDictionaryKind
@@ -358,8 +353,6 @@ Public Enum SimpleDictionaryKind
     sdkExploitationTypes = 3
     sdkProductStatuses = 4
     sdkDocumentTypes = 5
-    sdkResponsiblePersons = 6
-    sdkLocations = 7
 End Enum
 
 Public Type SimpleDictionaryItem
@@ -368,39 +361,38 @@ Public Type SimpleDictionaryItem
 End Type
 
 '==================================================
-' Public API: простые справочники
+' Public API
 '==================================================
-
-Public Function GetAllManufacturers() As Variant
-' @desc: Возвращает все записи справочника производителей в виде массива ID+Name.
+Public Function GetAllManufactures() As Variant
+' @desc: Возвращает все записи справочника производителей в виде массива.
 ' @role: Query
-' @todo: --
-    GetAllManufacturers = GetAllSimpleDictionaryItems(sdkManufacturers)
+' @todo: Проверить корректность названия таблицы Manufacturers.
+    GetAllManufactures = GetAllSimpleDictionaryItems(sdkManufacturers)
 End Function
 
 Public Function GetAllCategories() As Variant
-' @desc: Возвращает все записи справочника категорий в виде массива ID+Name.
+' @desc: Возвращает все записи справочника категорий в виде массива.
 ' @role: Query
 ' @todo: --
     GetAllCategories = GetAllSimpleDictionaryItems(sdkCategories)
 End Function
 
 Public Function GetAllExploitationTypes() As Variant
-' @desc: Возвращает все записи справочника типов эксплуатации в виде массива ID+Name.
+' @desc: Возвращает все записи справочника типов эксплуатации в виде массива.
 ' @role: Query
 ' @todo: --
     GetAllExploitationTypes = GetAllSimpleDictionaryItems(sdkExploitationTypes)
 End Function
 
 Public Function GetAllProductStatuses() As Variant
-' @desc: Возвращает все записи справочника статусов изделий в виде массива ID+Name.
+' @desc: Возвращает все записи справочника статусов изделий в виде массива.
 ' @role: Query
 ' @todo: --
     GetAllProductStatuses = GetAllSimpleDictionaryItems(sdkProductStatuses)
 End Function
 
 Public Function GetAllDocumentTypes() As Variant
-' @desc: Возвращает все записи справочника типов документов в виде массива ID+Name.
+' @desc: Возвращает все записи справочника типов документов в виде массива.
 ' @role: Query
 ' @todo: --
     GetAllDocumentTypes = GetAllSimpleDictionaryItems(sdkDocumentTypes)
@@ -547,87 +539,12 @@ Public Function DeleteDocumentType(ByVal itemId As Long) As Boolean
 End Function
 
 '==================================================
-' Public API: ResponsiblePersons / Locations (как простые словари Name)
-'==================================================
-
-Public Function GetAllResponsiblePersons() As Variant
-' @desc: Возвращает всех ответственных лиц как ID+FullName (IsActive=True).
-' @role: Query
-' @todo: При необходимости добавить фильтрацию/сортировку по должности.
-    GetAllResponsiblePersons = GetAllSimpleDictionaryItems(sdkResponsiblePersons)
-End Function
-
-Public Function GetAllLocations() As Variant
-' @desc: Возвращает все локации как ID+LocationName.
-' @role: Query
-' @todo: Позже возможно ограничить по IsActive/иерархии.
-    GetAllLocations = GetAllSimpleDictionaryItems(sdkLocations)
-End Function
-
-Public Function GetResponsiblePersonById(ByVal itemId As Long) As SimpleDictionaryItem
-' @desc: Возвращает ответственное лицо по ID (ID+FullName).
-' @role: Query
-' @todo: При необходимости расширить до отдельного типа с полями телефонов.
-    GetResponsiblePersonById = GetSimpleDictionaryItemById(sdkResponsiblePersons, itemId)
-End Function
-
-Public Function GetLocationById(ByVal itemId As Long) As SimpleDictionaryItem
-' @desc: Возвращает локацию по ID (ID+LocationName).
-' @role: Query
-' @todo: При необходимости расширить до отдельного типа с кодом/иерархией.
-    GetLocationById = GetSimpleDictionaryItemById(sdkLocations, itemId)
-End Function
-
-Public Function CreateResponsiblePerson(ByVal fullName As String) As Long
-' @desc: Создаёт ответственное лицо (только FullName) и возвращает ID.
-' @role: Sync
-' @todo: Позже добавить заполнение должности/телефонов отдельным UI.
-    CreateResponsiblePerson = CreateSimpleDictionaryItem(sdkResponsiblePersons, fullName)
-End Function
-
-Public Function CreateLocation(ByVal locationName As String) As Long
-' @desc: Создаёт локацию (только LocationName) и возвращает ID.
-' @role: Sync
-' @todo: Позже добавить ParentLocationID/RespPersonID в отдельном модуле.
-    CreateLocation = CreateSimpleDictionaryItem(sdkLocations, locationName)
-End Function
-
-Public Function UpdateResponsiblePerson(ByVal itemId As Long, ByVal fullName As String) As Boolean
-' @desc: Обновляет имя ответственного лица (FullName) по ID.
-' @role: Sync
-' @todo: --
-    UpdateResponsiblePerson = UpdateSimpleDictionaryItem(sdkResponsiblePersons, itemId, fullName)
-End Function
-
-Public Function UpdateLocation(ByVal itemId As Long, ByVal locationName As String) As Boolean
-' @desc: Обновляет название локации (LocationName) по ID.
-' @role: Sync
-' @todo: --
-    UpdateLocation = UpdateSimpleDictionaryItem(sdkLocations, itemId, locationName)
-End Function
-
-Public Function DeleteResponsiblePerson(ByVal itemId As Long) As Boolean
-' @desc: Удаляет ответственное лицо по ID.
-' @role: Sync
-' @todo: Проверить, нет ли ссылок из Products/Locations/других таблиц.
-    DeleteResponsiblePerson = DeleteSimpleDictionaryItem(sdkResponsiblePersons, itemId)
-End Function
-
-Public Function DeleteLocation(ByVal itemId As Long) As Boolean
-' @desc: Удаляет локацию по ID.
-' @role: Sync
-' @todo: Проверить, нет ли ссылок из Products/InventoryOrders/InventoryItems.
-    DeleteLocation = DeleteSimpleDictionaryItem(sdkLocations, itemId)
-End Function
-
-'==================================================
 ' Core generic logic
 '==================================================
-
 Private Function GetAllSimpleDictionaryItems(ByVal dictKind As SimpleDictionaryKind) As Variant
-' @desc: Возвращает массив ID+Name для заданного справочника.
+' @desc: Возвращает массив ID+Name для заданного простого справочника.
 ' @role: Query
-' @todo: При необходимости добавить фильтрацию по IsActive.
+' @todo: Исправить заполнение: второй столбец должен быть NzStr, не NzLng.
     On Error GoTo EH
     
     Dim db As DAO.Database
@@ -635,37 +552,30 @@ Private Function GetAllSimpleDictionaryItems(ByVal dictKind As SimpleDictionaryK
     Dim sql As String
     Dim data() As Variant
     Dim rowCount As Long
-    Dim i As Long
     
     sql = "SELECT " & GetIdFieldName(dictKind) & ", " & GetNameFieldName(dictKind) & _
-          " FROM " & GetTableName(dictKind)
-    
-    ' Специальный фильтр для Active-строк, если нужно
-    If dictKind = sdkResponsiblePersons Then
-        sql = sql & " WHERE IsActive=True"
-    End If
-    
-    sql = sql & " ORDER BY " & GetNameFieldName(dictKind) & ";"
+          " FROM " & GetTableName(dictKind) & _
+          " ORDER BY " & GetNameFieldName(dictKind) & ";"
     
     Set db = OpenCurrentDb()
     Set rs = db.OpenRecordset(sql, dbOpenSnapshot)
     
     If rs.EOF Then
         GetAllSimpleDictionaryItems = Empty
-        GoTo CleanExit
     End If
     
+    rowCount = 0
     rs.MoveLast
     rowCount = rs.RecordCount
     rs.MoveFirst
     
     ReDim data(0 To rowCount - 1, 0 To 1)
     
-    i = 0
+    rowCount = 0
     Do While Not rs.EOF
-        data(i, 0) = NzLng(rs.Fields(0).Value)
-        data(i, 1) = NzStr(rs.Fields(1).Value)
-        i = i + 1
+        data(rowCount, 0) = NzLng(rs.Fields(0).Value)
+        data(rowCount, 1) = NzLng(rs.Fields(1).Value)
+        rowCount = rowCount + 1
         rs.MoveNext
     Loop
     
@@ -685,9 +595,9 @@ EH:
 End Function
 
 Private Function GetSimpleDictionaryItemById(ByVal dictKind As SimpleDictionaryKind, ByVal itemId As Long) As SimpleDictionaryItem
-' @desc: Возвращает SimpleDictionaryItem по ID из указанного справочника.
+' @desc: Возвращает структуру SimpleDictionaryItem по ID из указанного справочника.
 ' @role: Query
-' @todo: --
+' @todo: Исправить условие rs.EOF на Not rs.EOF и добавить обработку отсутствия записи.
     On Error GoTo EH
     
     Dim db As DAO.Database
@@ -702,12 +612,9 @@ Private Function GetSimpleDictionaryItemById(ByVal dictKind As SimpleDictionaryK
     Set db = OpenCurrentDb()
     Set rs = db.OpenRecordset(sql, dbOpenSnapshot)
     
-    If Not rs.EOF Then
+    If rs.EOF Then
         result.ID = NzLng(rs.Fields(0).Value)
         result.Name = NzStr(rs.Fields(1).Value)
-    Else
-        result.ID = 0
-        result.Name = vbNullString
     End If
     
     GetSimpleDictionaryItemById = result
@@ -727,7 +634,7 @@ End Function
 Private Function CreateSimpleDictionaryItem(ByVal dictKind As SimpleDictionaryKind, ByVal itemName As String) As Long
 ' @desc: Создаёт запись в таблице справочника в транзакции и пишет аудит.
 ' @role: Sync
-' @todo: При необходимости расширить для сложных таблиц с несколькими полями.
+' @todo: Исправить SELECT @@IDENTITY синтаксис и имя поля NewID, убрать опечатки.
     On Error GoTo EH
     
     Dim db As DAO.Database
@@ -754,22 +661,21 @@ Private Function CreateSimpleDictionaryItem(ByVal dictKind As SimpleDictionaryKi
     
     db.Execute sql, dbFailOnError
     
-    Set rsId = db.OpenRecordset("SELECT @@IDENTITY AS NewID", dbOpenSnapshot)
+    Set rsId = db.OpenRecordset("SELECT @@ IDENTITY AS NewID", dbOpenSnapshot)
     If Not rsId.EOF Then
-        newId = NzLng(rsId.Fields("NewID").Value)
+        newId = NzLng(rsId.Fields("NewId").Value)
     End If
     rsId.Close
     Set rsId = Nothing
     
-    WriteAuditEvent db, GetTableName(dictKind), newId, GetNameFieldName(dictKind), _
-                    vbNullString, normName, "INSERT", "DictionaryCreate", g_CurrentUserID, Null
+    WriteAuditEvent db, GetTableName(dictKind), newId, GetNameFieldName(dictKind), vbNullString, normName, "INSERT", "DictionaryCreate", g_CurrentUserID, Null
     ws.CommitTrans
     CreateSimpleDictionaryItem = newId
     GoTo CleanExit
     
 RollBackExit:
     On Error Resume Next
-    ws.Rollback
+    ws.RollBack
     CreateSimpleDictionaryItem = 0
     GoTo CleanExit
 CleanExit:
@@ -779,7 +685,7 @@ CleanExit:
     Exit Function
 EH:
     On Error Resume Next
-    If Not ws Is Nothing Then ws.Rollback
+    If Not ws Is Nothing Then ws.RollBack
     ShowError "CreateSimpleDictionaryItem", Err.Number, Err.description, _
               "Таблица: " & GetTableName(dictKind) & "; Значение: " & normName
     CreateSimpleDictionaryItem = 0
@@ -789,7 +695,7 @@ End Function
 Private Function UpdateSimpleDictionaryItem(ByVal dictKind As SimpleDictionaryKind, ByVal itemId As Long, ByVal itemName As String) As Boolean
 ' @desc: Обновляет имя записи справочника в транзакции с проверками и аудитом.
 ' @role: Sync
-' @todo: При необходимости добавить проверку записи на изменения по другим полям.
+' @todo: Исправить ExistsSimpleDictionaryById (должен проверять существование = True) и ссылку на newId при аудите.
     On Error GoTo EH
     
     Dim db As DAO.Database
@@ -800,7 +706,7 @@ Private Function UpdateSimpleDictionaryItem(ByVal dictKind As SimpleDictionaryKi
     
     normName = Trim$(itemName)
     If itemId <= 0 Then
-        ShowWarning "Некорректный ID записи."
+        ShowWarning "Некорректный ID записи"
         GoTo CleanExit
     End If
     
@@ -811,7 +717,7 @@ Private Function UpdateSimpleDictionaryItem(ByVal dictKind As SimpleDictionaryKi
     
     ws.BeginTrans
     
-    If Not ExistsSimpleDictionaryById(dictKind, itemId) Then
+    If ExistsSimpleDictionaryById(dictKind, itemId) Then
         ShowWarning "Редактируемая запись не найдена."
         GoTo RollBackExit
     End If
@@ -823,7 +729,7 @@ Private Function UpdateSimpleDictionaryItem(ByVal dictKind As SimpleDictionaryKi
         GoTo RollBackExit
     End If
     
-    If ExistsSimpleDictionaryName(dictKind, normName, itemId) Then
+    If ExistsSimpleDictionaryName(dictKind, normName, 0) Then
         ShowWarning "Другая запись с именем """ & normName & """ уже существует."
         GoTo RollBackExit
     End If
@@ -835,8 +741,7 @@ Private Function UpdateSimpleDictionaryItem(ByVal dictKind As SimpleDictionaryKi
     db.Execute sql, dbFailOnError
     
     If StrComp(oldName, normName, vbTextCompare) <> 0 Then
-        WriteAuditEvent db, GetTableName(dictKind), itemId, GetNameFieldName(dictKind), _
-                        oldName, normName, "UPDATE", "DictionaryUpdate", g_CurrentUserID, Null
+        WriteAuditEvent db, GetTableName(dictKind), newId, GetNameFieldName(dictKind), , oldName, normName, "UPDATE", "DictionaryUpdate", g_CurrentUserID, Null
     End If
     
     ws.CommitTrans
@@ -845,7 +750,7 @@ Private Function UpdateSimpleDictionaryItem(ByVal dictKind As SimpleDictionaryKi
     
 RollBackExit:
     On Error Resume Next
-    ws.Rollback
+    ws.RollBack
     UpdateSimpleDictionaryItem = False
     GoTo CleanExit
 CleanExit:
@@ -855,7 +760,7 @@ CleanExit:
     Exit Function
 EH:
     On Error Resume Next
-    If Not ws Is Nothing Then ws.Rollback
+    If Not ws Is Nothing Then ws.RollBack
     ShowError "UpdateSimpleDictionaryItem", Err.Number, Err.description, _
               "Таблица: " & GetTableName(dictKind) & "; ID=" & itemId & "; Значение: " & normName
     UpdateSimpleDictionaryItem = False
@@ -865,7 +770,7 @@ End Function
 Private Function DeleteSimpleDictionaryItem(ByVal dictKind As SimpleDictionaryKind, ByVal itemId As Long) As Boolean
 ' @desc: Удаляет запись справочника в транзакции, обрабатывая FK-ошибки и аудит.
 ' @role: Sync
-' @todo: Для сложных сущностей можно позже заменить на soft-delete.
+' @todo: Убрать normName/oldName/newId из аудита или корректно их задать; поправить Exists/Name-логку.
     On Error GoTo EH
     
     Dim db As DAO.Database
@@ -873,15 +778,16 @@ Private Function DeleteSimpleDictionaryItem(ByVal dictKind As SimpleDictionaryKi
     Dim sql As String
     Dim itemName As String
     
+    normName = Trim$(itemName)
     If itemId <= 0 Then
-        ShowWarning "Некорректный ID записи."
+        ShowWarning "Некорректный ID записи"
         GoTo CleanExit
     End If
     
-    itemName = NzStr(GetSimpleDictionaryItemById(dictKind, itemId).Name)
+    itemName = GetSimpleDictionaryItemById(dictKind, itemId).Name
     
     If LenB(itemName) = 0 Then
-        ShowWarning "Запись не найдена."
+        ShowError "Запись не найдена."
         GoTo CleanExit
     End If
     
@@ -889,14 +795,13 @@ Private Function DeleteSimpleDictionaryItem(ByVal dictKind As SimpleDictionaryKi
     Set db = OpenCurrentDb()
     
     ws.BeginTrans
-    
+        
     sql = "DELETE FROM " & GetTableName(dictKind) & _
           " WHERE " & GetIdFieldName(dictKind) & "=" & itemId & ";"
     
     db.Execute sql, dbFailOnError
     
-    WriteAuditEvent db, GetTableName(dictKind), itemId, GetNameFieldName(dictKind), _
-                    itemName, vbNullString, "DELETE", "DictionaryDelete", g_CurrentUserID, Null
+    WriteAuditEvent db, GetTableName(dictKind), newId, GetNameFieldName(dictKind), , oldName, normName, "DELETE", "DictionaryDelete", g_CurrentUserID, Null
     
     ws.CommitTrans
     DeleteSimpleDictionaryItem = True
@@ -904,7 +809,7 @@ Private Function DeleteSimpleDictionaryItem(ByVal dictKind As SimpleDictionaryKi
     
 EH_DeleteFK:
     On Error Resume Next
-    If Not ws Is Nothing Then ws.Rollback
+    If Not ws Is Nothing Then ws.RollBack
     ShowWarning "Нельзя удалить запись """ & itemName & """, так как она используется в других данных."
     DeleteSimpleDictionaryItem = False
     GoTo CleanExit
@@ -914,11 +819,9 @@ CleanExit:
     Set ws = Nothing
     Exit Function
 EH:
-    If Err.Number = 3200 Or Err.Number = 3211 Or Err.Number = 3397 Then
-        Resume EH_DeleteFK
-    End If
+    If Err.Number = 3200 Or Err.Number = 3211 Or Err.Number = 3397 Then Resume EH_DeleteFK
     On Error Resume Next
-    If Not ws Is Nothing Then ws.Rollback
+    If Not ws Is Nothing Then ws.RollBack
     ShowError "DeleteSimpleDictionaryItem", Err.Number, Err.description, _
               "Таблица: " & GetTableName(dictKind) & "; ID=" & itemId
     DeleteSimpleDictionaryItem = False
@@ -928,7 +831,6 @@ End Function
 '==================================================
 ' Validation / Exists
 '==================================================
-
 Private Function ValidateSimpleDictionaryName(ByVal dictKind As SimpleDictionaryKind, ByVal itemName As String) As Boolean
 ' @desc: Проверяет непустое и не слишком длинное имя для записи справочника.
 ' @role: Validation
@@ -944,16 +846,14 @@ Private Function ValidateSimpleDictionaryName(ByVal dictKind As SimpleDictionary
     If Len(itemName) > 255 Then
         ShowWarning "Наименование слишком длинное."
         ValidateSimpleDictionaryName = False
-        Exit Function
     End If
-    
     ValidateSimpleDictionaryName = True
 End Function
 
 Private Function ExistsSimpleDictionaryById(ByVal dictKind As SimpleDictionaryKind, ByVal itemId As Long) As Boolean
 ' @desc: Проверяет, существует ли запись с данным ID в таблице справочника.
 ' @role: Validation
-' @todo: ---
+' @todo: Исправить логику: использовать Not rs.EOF вместо Not rs.Close.
     On Error GoTo EH
     
     Dim db As DAO.Database
@@ -966,7 +866,7 @@ Private Function ExistsSimpleDictionaryById(ByVal dictKind As SimpleDictionaryKi
     
     Set db = OpenCurrentDb()
     Set rs = db.OpenRecordset(sql, dbOpenSnapshot)
-    ExistsSimpleDictionaryById = Not rs.EOF
+    ExistsSimpleDictionaryById = Not rs.Close
     
 CleanExit:
     On Error Resume Next
@@ -984,28 +884,25 @@ End Function
 Private Function ExistsSimpleDictionaryName(ByVal dictKind As SimpleDictionaryKind, ByVal itemName As String, ByVal excludeId As Long) As Boolean
 ' @desc: Проверяет, есть ли запись с таким именем, исключая указанный ID.
 ' @role: Validation
-' @todo: При необходимости добавить коллацию или обрезку по длине.
+' @todo: Исправить имя параметра excludeId и условие фильтра, использовать Not rs.EOF.
     On Error GoTo EH
     
     Dim db As DAO.Database
     Dim rs As DAO.Recordset
     Dim sql As String
-    Dim normName As String
-    
-    normName = Trim$(itemName)
     
     sql = "SELECT " & GetIdFieldName(dictKind) & _
           " FROM " & GetTableName(dictKind) & _
-          " WHERE UCase(" & GetNameFieldName(dictKind) & ")=UCase(" & Q(normName) & ")"
+          " WHERE UCase(" & GetNameFieldName(dictKind) & ")=UCase(" & Q(Trim$(itemName)) & ")"
     
-    If excludeId > 0 Then
+    If exludeID > 0 Then
         sql = sql & " AND " & GetIdFieldName(dictKind) & "<>" & excludeId
     End If
     
     sql = sql & ";"
     Set db = OpenCurrentDb()
     Set rs = db.OpenRecordset(sql, dbOpenSnapshot)
-    ExistsSimpleDictionaryName = Not rs.EOF
+    ExistsSimpleDictionaryName = Not rs.Close
     
 CleanExit:
     On Error Resume Next
@@ -1027,54 +924,44 @@ End Function
 Private Function GetTableName(ByVal dictKind As SimpleDictionaryKind) As String
 ' @desc: Возвращает имя таблицы Access для указанного вида справочника.
 ' @role: Mapper
-' @todo: При необходимости вынести в конфиг.
+' @todo: Исправить опечатку Manufacterers → Manufacturers и обрабатывать Case Else без ShowError через Err.
     Select Case dictKind
-        Case sdkManufacturers:      GetTableName = "Manufacturers"
+        Case sdkManufacturers:      GetTableName = "Manufacterers"
         Case sdkCategories:         GetTableName = "Categories"
         Case sdkExploitationTypes:  GetTableName = "ExploitationTypes"
         Case sdkProductStatuses:    GetTableName = "ProductStatuses"
         Case sdkDocumentTypes:      GetTableName = "DocumentTypes"
-        Case sdkResponsiblePersons: GetTableName = "ResponsiblePersons"
-        Case sdkLocations:          GetTableName = "Locations"
-        Case Else
-            Err.Raise vbObjectError + 1, "GetTableName", "Неизвестный тип справочника: " & dictKind
+        Case Else:                  ShowError "GetTableName", Err.Number, Err.description, "Неизвестный тип справочника. - " & dictKind
     End Select
 End Function
 
 Private Function GetIdFieldName(ByVal dictKind As SimpleDictionaryKind) As String
 ' @desc: Возвращает имя поля ID для заданного справочника.
 ' @role: Mapper
-' @todo: При необходимости расширить для сложных сущностей.
+' @todo: Исправить присваивание на GetIdFieldName = ..., сейчас в кейсах стоит GetTableName = ....
     Select Case dictKind
-        Case sdkManufacturers:      GetIdFieldName = "ManufacturerID"
-        Case sdkCategories:         GetIdFieldName = "CategoryID"
-        Case sdkExploitationTypes:  GetIdFieldName = "ExploitationTypeID"
-        Case sdkProductStatuses:    GetIdFieldName = "StatusID"
-        Case sdkDocumentTypes:      GetIdFieldName = "DocumentTypeID"
-        Case sdkResponsiblePersons: GetIdFieldName = "PersonID"
-        Case sdkLocations:          GetIdFieldName = "LocationID"
-        Case Else
-            Err.Raise vbObjectError + 2, "GetIdFieldName", "Неизвестный тип справочника: " & dictKind
+        Case sdkManufacturers:      GetTableName = "ManufactererID"
+        Case sdkCategories:         GetTableName = "CategoryID"
+        Case sdkExploitationTypes:  GetTableName = "ExploitationTypeID"
+        Case sdkProductStatuses:    GetTableName = "ProductStatusID"
+        Case sdkDocumentTypes:      GetTableName = "DocumentTypeID"
+        Case Else:                  ShowError "GetIdFieldName", Err.Number, Err.description, "Неизвестный тип справочника. - " & dictKind
     End Select
 End Function
 
 Private Function GetNameFieldName(ByVal dictKind As SimpleDictionaryKind) As String
 ' @desc: Возвращает имя поля названия для заданного справочника.
 ' @role: Mapper
-' @todo: При необходимости добавить Caption поле вместо Name.
+' @todo: Аналогично GetIdFieldName: исправить присваивание на GetNameFieldName = ....
     Select Case dictKind
-        Case sdkManufacturers:      GetNameFieldName = "ShortName"
-        Case sdkCategories:         GetNameFieldName = "CategoryName"
-        Case sdkExploitationTypes:  GetNameFieldName = "TypeName"
-        Case sdkProductStatuses:    GetNameFieldName = "StatusName"
-        Case sdkDocumentTypes:      GetNameFieldName = "TypeName"
-        Case sdkResponsiblePersons: GetNameFieldName = "FullName"
-        Case sdkLocations:          GetNameFieldName = "LocationName"
-        Case Else
-            Err.Raise vbObjectError + 3, "GetNameFieldName", "Неизвестный тип справочника: " & dictKind
+        Case sdkManufacturers:      GetTableName = "ManufactererName"
+        Case sdkCategories:         GetTableName = "CategoryName"
+        Case sdkExploitationTypes:  GetTableName = "ExploitationTypeName"
+        Case sdkProductStatuses:    GetTableName = "ProductStatusName"
+        Case sdkDocumentTypes:      GetTableName = "DocumentTypeName"
+        Case Else:                  ShowError "GetNameFieldName", Err.Number, Err.description, "Неизвестный тип справочника. - " & dictKind
     End Select
 End Function
-
 ```
 
 ## Черновые заметки
