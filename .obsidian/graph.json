@@ -15,17 +15,17 @@
       }
     },
     {
-      "query": "web3",
-      "color": {
-        "a": 1,
-        "rgb": 1966335
-      }
-    },
-    {
       "query": "Reading",
       "color": {
         "a": 1,
         "rgb": 5431401
+      }
+    },
+    {
+      "query": "web3",
+      "color": {
+        "a": 1,
+        "rgb": 5526240
       }
     }
   ],
@@ -39,6 +39,6 @@
   "repelStrength": 10,
   "linkStrength": 1,
   "linkDistance": 250,
-  "scale": 0.1778387707761382,
+  "scale": 0.17783877077613808,
   "close": true
 }
