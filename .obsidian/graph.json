@@ -27,6 +27,13 @@
         "a": 1,
         "rgb": 5526240
       }
+    },
+    {
+      "query": "code-agent",
+      "color": {
+        "a": 1,
+        "rgb": 14606418
+      }
     }
   ],
   "collapse-display": false,
@@ -39,6 +46,6 @@
   "repelStrength": 10,
   "linkStrength": 1,
   "linkDistance": 250,
-  "scale": 0.3495520710511864,
+  "scale": 0.32133638605035686,
   "close": true
 }
