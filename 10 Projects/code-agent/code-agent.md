@@ -293,7 +293,7 @@ SORT deadline ASC
 - [[10 Projects/code-agent/Классы/CodeRunner|CodeRunner — запуск кода]]
 - [[10 Projects/code-agent/Классы/FixLoop|FixLoop — петля исправления]]
 
-### Планируемые файлы новой архитектуры
+### Карточки новой архитектуры
 - [[10 Projects/code-agent/Классы/PlannerAgent|PlannerAgent — декомпозиция задач]]
 - [[10 Projects/code-agent/Классы/WorkerAgent|WorkerAgent — выполнение подзадач]]
 - [[10 Projects/code-agent/Классы/Orchestrator|Orchestrator — координация planner/worker]]
@@ -301,6 +301,19 @@ SORT deadline ASC
 - [[10 Projects/code-agent/Модули/RAGService|RAGService — retrieval и память]]
 - [[10 Projects/code-agent/Модули/WebUI|WebUI — пользовательский интерфейс]]
 
+## Статус заметок
+Главный файл проекта обновлён под актуальную multi-agent архитектуру.
+
+Карточки базовой новой архитектуры уже созданы:
+- PlannerAgent
+- WorkerAgent
+- Orchestrator
+- ConversationStore
+- RAGService
+- WebUI
+
+Старые заметки v1 сохраняются как foundation для worker/tools слоя.
+Следующий этап — выровнять задачи под новую архитектуру и зафиксировать контракты между planner, worker и orchestrator.
 ## Заметки
 
 ### Текущая рабочая гипотеза
@@ -316,9 +329,3 @@ SORT deadline ASC
 
 Проект больше не воспринимается как просто “генератор Python-кода”.
 Цель — собрать локальную платформу умного AI-помощника для работы с проектами, знаниями, файлами, git и веб-контекстом.
-
-## Статус заметок
-
-Сейчас обновлён главный файл проекта и описание целевой архитектуры.
-Карточки новой архитектуры ещё не созданы и будут добавляться поэтапно.
-Старые заметки v1 сохраняются как foundation для worker/tools слоя.

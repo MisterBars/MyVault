@@ -1,34 +1,34 @@
 ---
 type: task
-task_type: dev
-status: backlog
+task_type: architecture
+status: active
 project: "[[code-agent]]"
 deadline: 2026-06-15
 reward_xp: 100
+phase: architecture
 tags:
   - task
   - skill/python
   - skill/ai
+  - architecture
 ---
 
-# Задача: Orchestrator + PlannerAgent + WorkerAgent
+# Задача: Зафиксировать контур planner / worker / orchestrator
 
 ## Что нужно сделать
-- [ ] Создать карточку [[10 Projects/code-agent/Классы/PlannerAgent]]
-- [ ] Создать карточку [[10 Projects/code-agent/Классы/WorkerAgent]]
-- [ ] Создать карточку [[10 Projects/code-agent/Классы/Orchestrator]]
-- [ ] Описать контракт между planner и worker
-- [ ] Описать правило возврата сложной подзадачи на перепланирование
-- [ ] Зафиксировать ограничение глубины перепланирования
-- [ ] Зафиксировать минимальный сценарий Phase 1: только текстовые ответы, без тяжёлых tools
+- [ ] Создать и заполнить [[10 Projects/code-agent/Контракты и типы данных]]
+- [ ] Зафиксировать `PlanResult`
+- [ ] Зафиксировать `WorkerResult`
+- [ ] Зафиксировать `OrchestratorResult`
+- [ ] Описать правило `needs_replan`
+- [ ] Описать ограничение по глубине перепланирования
+- [ ] Описать минимальный сценарий Phase 1 без тяжёлых tools
 
 ## Критерий выполнения
-В заметках проекта описан минимальный рабочий контур:
-User → Orchestrator → PlannerAgent → WorkerAgent → ответ.
-
-Если подзадача слишком сложная:
-WorkerAgent → PlannerAgent → новая декомпозиция.
+Есть отдельный документ с контрактами и типами данных.
+Роли planner, worker и orchestrator связаны единым протоколом.
+Понятно, какие данные передаются между сущностями и что считается успешным завершением шага.
 
 ## Заметки
-Это новая интеграционная задача v2.
-Старая интеграция вокруг одного CodeAgent больше не является целевой архитектурой.
+Это уже не задача на создание карточек.
+Карточки ролей созданы, теперь нужно согласовать их между собой.
