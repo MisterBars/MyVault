@@ -1,7 +1,7 @@
 ---
 type: task
 task_type: dev
-status: backlog
+status: foundation-dev
 project: "[[code-agent]]"
 deadline: 2026-05-28
 reward_xp: 50

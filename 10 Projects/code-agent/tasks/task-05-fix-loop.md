@@ -1,7 +1,7 @@
 ---
 type: task
 task_type: dev
-status: backlog
+status: tool/strategy
 project: "[[code-agent]]"
 deadline: 2026-06-08
 reward_xp: 80

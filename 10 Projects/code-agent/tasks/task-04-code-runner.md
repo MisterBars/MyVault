@@ -1,7 +1,7 @@
 ---
 type: task
 task_type: dev
-status: backlog
+status: worker tool foundation
 project: "[[code-agent]]"
 deadline: 2026-06-01
 reward_xp: 60
