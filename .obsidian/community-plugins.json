@@ -5,7 +5,6 @@
   "obsidian-tasks-plugin",
   "table-editor-obsidian",
   "calendar",
-  "obsidian-git",
   "obsidian-kanban",
   "quickadd",
   "editing-toolbar",
@@ -15,5 +14,6 @@
   "obsidian-minimal-settings",
   "highlightr-plugin",
   "obsidian-checklist-plugin",
-  "remotely-save"
+  "remotely-save",
+  "obsidian-git"
 ]
