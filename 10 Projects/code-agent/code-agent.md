@@ -293,7 +293,7 @@ SORT deadline ASC
 - [[10 Projects/code-agent/Классы/CodeRunner|CodeRunner — запуск кода]]
 - [[10 Projects/code-agent/Классы/FixLoop|FixLoop — петля исправления]]
 
-### Новая архитектура
+### Планируемые файлы новой архитектуры
 - [[10 Projects/code-agent/Классы/PlannerAgent|PlannerAgent — декомпозиция задач]]
 - [[10 Projects/code-agent/Классы/WorkerAgent|WorkerAgent — выполнение подзадач]]
 - [[10 Projects/code-agent/Классы/Orchestrator|Orchestrator — координация planner/worker]]
@@ -316,3 +316,9 @@ SORT deadline ASC
 
 Проект больше не воспринимается как просто “генератор Python-кода”.
 Цель — собрать локальную платформу умного AI-помощника для работы с проектами, знаниями, файлами, git и веб-контекстом.
+
+## Статус заметок
+
+Сейчас обновлён главный файл проекта и описание целевой архитектуры.
+Карточки новой архитектуры ещё не созданы и будут добавляться поэтапно.
+Старые заметки v1 сохраняются как foundation для worker/tools слоя.
